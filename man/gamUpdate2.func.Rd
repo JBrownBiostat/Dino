@@ -4,7 +4,7 @@
 \alias{gamUpdate2.func}
 \title{Calculate EM gamma updates at update pars}
 \usage{
-\code(gamUpdate2.func(parList))
+\code{gamUpdate2.func(parList)}
 }
 \description{
 \code{gamUpdate2.func} is a helper function to compute the EM

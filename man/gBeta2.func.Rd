@@ -4,7 +4,7 @@
 \alias{gBeta2.func}
 \title{Calculate likelihood gradient in beta at update pars}
 \usage{
-\code(gBeta2.func(parList))
+\code{gBeta2.func(parList)}
 }
 \description{
 \code{gBeta2.func} is a helper function to compute the

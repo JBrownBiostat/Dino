@@ -4,7 +4,7 @@
 \alias{parUpdate.func}
 \title{Calculate EM parameter updates}
 \usage{
-\code(parUpdate.func(parList))
+\code{parUpdate.func(parList)}
 }
 \description{
 \code{parUpdate.func} is a helper function to compute the EM

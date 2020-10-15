@@ -4,7 +4,7 @@
 \alias{parListUpdate.func}
 \title{Update parList by removing parameter}
 \usage{
-\code(parListUpdate.func(parList))
+\code{parListUpdate.func(parList, doBeta = F)}
 }
 \description{
 \code{parListUpdate.func} is a helper function to update

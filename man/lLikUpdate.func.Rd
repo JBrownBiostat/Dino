@@ -4,7 +4,7 @@
 \alias{lLikUpdate.func}
 \title{Calculate EM log-likelihood at update pars}
 \usage{
-\code(lLikUpdate.func(parList))
+\code{lLikUpdate.func(parList)}
 }
 \description{
 \code{lLikUpdate.func} is a helper function to compute the EM

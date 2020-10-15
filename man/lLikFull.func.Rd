@@ -4,7 +4,7 @@
 \alias{lLikFull.func}
 \title{Calculate Full EM log-likelihood}
 \usage{
-\code(lLikFull.func(parList))
+\code{lLikFull.func(parList)}
 }
 \description{
 \code{lLikFull.func} is a helper function to compute the EM

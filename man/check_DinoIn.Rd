@@ -4,7 +4,8 @@
 \alias{check_DinoIn}
 \title{Check Dino input}
 \usage{
-\code{counts, nCores, prec, seed, minNZ depth, slope, returnMeta)}
+\code{counts, nCores, prec, seed, minNZ, nSubGene, nSubCell, depth,
+  slope, returnMeta)}
 }
 \description{
 \code{check_DinoIn} is a helper function to verify the

@@ -32,7 +32,10 @@ recommended to pre-filter the \emph{counts} matrix such that all genes
 meet this threshold. Otherwise, genes with fewer than \emph{minNZ}
 non-zeros will be scaled by depth for normalization.}
 
-\item{nSub}{A positive integer denoting the number of samples to subset
+\item{nSubGene}{A positive integer denoting the number of genes to subset
+for calculation of \emph{slope}.}
+
+\item{nSubCell}{A positive integer denoting the number of samples to subset
 for calculation of \emph{slope} and the EM algorithm.}
 
 \item{depth}{A numeric vector of length equal to the columns of counts.
@@ -46,6 +49,16 @@ the log-log scale. Typical values are close to 1 (implying a unit increase
 in depth corresponds to a unit increase in expected counts on the log-log
 scale), but may be higher, particularly in the case of non-UMI
 protocols. \code{Dino} defaults to estimating \emph{slope} internally.}
+
+\item{minSlope}{A numeric scalar denoting the minimum slope. Fitted slopes
+below this value will return a warning and be set to 1}
+
+\item{maxSlope}{A numeric scalar denoting the maximum slope. Fitted slopes
+above this value will return a warning and be set to 1}
+
+\item{clusterSlope}{A logical indicating whether cells should be
+pre-clustered prior to calculation of slope. Under the default where
+cells are pre-clustered, cluster is used as a factor in the regression.}
 
 \item{returnMeta}{A logical indicating whether metadata (sequencing depth
 and slope) should be returned.}

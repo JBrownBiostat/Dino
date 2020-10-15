@@ -4,7 +4,7 @@
 \alias{lpMat.func}
 \title{Calculate EM membership log-probabilities}
 \usage{
-\code(lpMat.func(parList))
+\code{lpMat.func(parList)}
 }
 \description{
 \code{lpMat.func} is a helper function to compute the EM

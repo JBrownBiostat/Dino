@@ -4,7 +4,7 @@
 \alias{gTilde.func}
 \title{Calculate EM parameter updates}
 \usage{
-\code(gTilde.func(parList))
+\code{gTilde.func(parList)}
 }
 \description{
 \code{gTilde.func} is a helper function to compute the EM

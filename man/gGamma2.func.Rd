@@ -4,7 +4,7 @@
 \alias{gGamma2.func}
 \title{Calculate likelihood gradient in gamma at update pars}
 \usage{
-\code(gGamma2.func(parList))
+\code{gGamma2.func(parList)}
 }
 \description{
 \code{gGamma2.func} is a helper function to compute the

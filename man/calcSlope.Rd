@@ -4,7 +4,8 @@
 \alias{calcSlope}
 \title{Calculate expression-depth slope}
 \usage{
-\code{calcSlope(counts, depth, nSub, nCores, ...)}
+\code{calcSlope(counts, depth, nSubCell, nSubGene,
+  clusterSlope, nCores, ...)}
 }
 \description{
 \code{calcSlope} is a helper function to calculate the

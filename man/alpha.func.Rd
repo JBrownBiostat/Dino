@@ -4,7 +4,7 @@
 \alias{alpha.func}
 \title{Calculate initial EM step length}
 \usage{
-\code(alpha.func(parList))
+\code{alpha.func(parList)}
 }
 \description{
 \code{alpha.func} is a helper function to compute the

@@ -4,7 +4,7 @@
 \alias{parGradUpdate.func}
 \title{Calculate EM parameter gradients at update pars}
 \usage{
-\code(parGradUpdate.func(parList))
+\code{parGradUpdate.func(parList)}
 }
 \description{
 \code{parGradUpdate.func} is a helper function to compute the EM

@@ -4,7 +4,7 @@
 \alias{betaUpdate2.func}
 \title{Calculate EM beta updates at update pars}
 \usage{
-\code(betaUpdate2.func(parList))
+\code{betaUpdate2.func(parList)}
 }
 \description{
 \code{betaUpdate2.func} is a helper function to compute the EM

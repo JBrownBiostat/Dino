@@ -4,7 +4,7 @@
 \alias{zoom.func}
 \title{Find acceptable step length from bounds}
 \usage{
-\code(zoom.func(parList, alphaBounds))
+\code{zoom.func(parList, alphaBounds)}
 }
 \description{
 \code{zoom.func} is a helper function to calculate the

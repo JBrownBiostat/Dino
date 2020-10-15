@@ -4,7 +4,7 @@
 \alias{calcStep.func}
 \title{Calculate EM step direction/length}
 \usage{
-\code(calcStep.func(parList))
+\code{calcStep.func(parList)}
 }
 \description{
 \code{calcStep.func} is a helper function to calculate the

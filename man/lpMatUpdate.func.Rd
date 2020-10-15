@@ -4,7 +4,7 @@
 \alias{lpMatUpdate.func}
 \title{Calculate EM membership log-probabilities at update pars}
 \usage{
-\code(lpMatUpdate.func(parList))
+\code{lpMatUpdate.func(parList)}
 }
 \description{
 \code{lpMatUpdate.func} is a helper function to compute the EM
