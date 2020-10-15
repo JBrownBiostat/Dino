@@ -1,0 +1,25 @@
+{
+    "id": "3E0E2226",
+    "path": "~/Documents/Research/10X/rProjects/Dino_v0-6-1/R/CalcECDF.R",
+    "project_path": "R/CalcECDF.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1595881441565.0,
+    "source_on_save": false,
+    "relative_order": 6,
+    "properties": {
+        "tempName": "Untitled1",
+        "cursorPosition": "82,12",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1595882459,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1595885677566,
+    "read_only": false,
+    "read_only_alternatives": []
+}

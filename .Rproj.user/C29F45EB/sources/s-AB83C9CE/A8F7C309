@@ -1,0 +1,25 @@
+{
+    "id": "A8F7C309",
+    "path": "~/Documents/Research/10X/rProjects/Dino_v0-6-1/R/CalcSlope.R",
+    "project_path": "R/CalcSlope.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1595878632829.0,
+    "source_on_save": false,
+    "relative_order": 4,
+    "properties": {
+        "tempName": "Untitled1",
+        "cursorPosition": "35,2",
+        "scrollLine": "0"
+    },
+    "folds": "49|67|59|0|\n72|40|85|0|\n",
+    "lastKnownWriteTime": 1595880289,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1595885677558,
+    "read_only": false,
+    "read_only_alternatives": []
+}
