@@ -482,7 +482,7 @@ parGradUpdate.func <- function(parList) {
 #' @description \code{alpha.func} is a helper function to compute the
 #'   initial EM step length
 #'
-#' @usage \code(alpha.func(parList))
+#' @usage \code{alpha.func(parList)}
 alpha.func <- function(parList) {
   return(c(sign(t(parList$d) %*% parList$g$g)))
 }
