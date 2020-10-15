@@ -202,7 +202,7 @@ parResampCounts <- function(countList, depth, depthRep, slope,
 #' @description \code{lLik.func} is a helper function to compute the EM
 #'   log-likelihood up to an addative constant
 #'
-#' @usage \code(lLik.func(parList))
+#' @usage \code{lLik.func(parList)}
 #'
 #' @importFrom matrixStats rowMaxs
 lLik.func <- function(parList) {
@@ -220,7 +220,7 @@ lLik.func <- function(parList) {
 #' @description \code{lLikFull.func} is a helper function to compute the EM
 #'   log-likelihood up to an addative constant
 #'
-#' @usage \code(lLikFull.func(parList))
+#' @usage \code{lLikFull.func(parList)}
 #'
 #' @importFrom matrixStats rowMaxs
 lLikFull.func <- function(parList) {
@@ -239,7 +239,7 @@ lLikFull.func <- function(parList) {
 #' @description \code{lLikUpdate.func} is a helper function to compute the EM
 #'   log-likelihood up to an addative constant at update pars
 #'
-#' @usage \code(lLikUpdate.func(parList))
+#' @usage \code{lLikUpdate.func(parList)}
 #'
 #' @importFrom matrixStats rowMaxs
 lLikUpdate.func <- function(parList) {
@@ -257,7 +257,7 @@ lLikUpdate.func <- function(parList) {
 #' @description \code{lpMat.func} is a helper function to compute the EM
 #'   log membership probabilities
 #'
-#' @usage \code(lpMat.func(parList))
+#' @usage \code{lpMat.func(parList)}
 #'
 #' @importFrom matrixStats rowMaxs
 #' @importFrom matrixStats colMaxs
@@ -280,7 +280,7 @@ lpMat.func <- function(parList) {
 #' @description \code{lpMatUpdate.func} is a helper function to compute the EM
 #'   log membership probabilities at update pars
 #'
-#' @usage \code(lpMatUpdate.func(parList))
+#' @usage \code{lpMatUpdate.func(parList)}
 #'
 #' @importFrom matrixStats rowMaxs
 #' @importFrom matrixStats colMaxs
@@ -303,7 +303,7 @@ lpMatUpdate.func <- function(parList) {
 #' @description \code{gamUpdate.func} is a helper function to compute the EM
 #'   update to the gamma parameter
 #'
-#' @usage \code(gamUpdate.func(parList))
+#' @usage \code{gamUpdate.func(parList)}
 gamUpdate.func <- function(parList) {
   gamUpdate <- log(rowSums(parList$pList$spMat)) +
     parList$pList$lpMax
@@ -316,7 +316,7 @@ gamUpdate.func <- function(parList) {
 #' @description \code{gamUpdate2.func} is a helper function to compute the EM
 #'   update to the gamma parameter at update pars
 #'
-#' @usage \code(gamUpdate2.func(parList))
+#' @usage \code{gamUpdate2.func(parList)}
 gamUpdate2.func <- function(parList) {
   gamUpdate <- log(rowSums(parList$pListUpdate$spMat)) +
     parList$pListUpdate$lpMax
@@ -329,7 +329,7 @@ gamUpdate2.func <- function(parList) {
 #' @description \code{betaUpdate.func} is a helper function to compute the EM
 #'   update to the beta parameter
 #'
-#' @usage \code(betaUpdate.func(parList))
+#' @usage \code{betaUpdate.func(parList)}
 betaUpdate.func <- function(parList) {
   betaUpdate <- log(pmax(parList$pList$spMat %*% parList$y, sqrt(.Machine$double.xmin))) -
     log(pmax(parList$pList$spMat %*% parList$depth, sqrt(.Machine$double.xmin)))
@@ -342,7 +342,7 @@ betaUpdate.func <- function(parList) {
 #' @description \code{betaUpdate2.func} is a helper function to compute the EM
 #'   update to the beta parameter at update pars
 #'
-#' @usage \code(betaUpdate2.func(parList))
+#' @usage \code{betaUpdate2.func(parList)}
 betaUpdate2.func <- function(parList) {
   betaUpdate <- log(pmax(parList$pListUpdate$spMat %*% parList$y, sqrt(.Machine$double.xmin))) -
     log(pmax(parList$pListUpdate$spMat %*% parList$depth, sqrt(.Machine$double.xmin)))
@@ -355,7 +355,7 @@ betaUpdate2.func <- function(parList) {
 #' @description \code{gTilde.func} is a helper function to compute the EM
 #'   parameter update deltas
 #'
-#' @usage \code(gTilde.func(parList))
+#' @usage \code{gTilde.func(parList)}
 gTilde.func <- function(parList) {
   gamUpdate <- gamUpdate.func(parList)
   betaUpdate <- betaUpdate.func(parList)
@@ -373,7 +373,7 @@ gTilde.func <- function(parList) {
 #' @description \code{gTildeUpdate.func} is a helper function to compute the EM
 #'   parameter update deltas at update pars
 #'
-#' @usage \code(gTildeUpdate.func(parList))
+#' @usage \code{gTildeUpdate.func(parList)}
 gTildeUpdate.func <- function(parList) {
   gamUpdate <- gamUpdate2.func(parList)
   betaUpdate <- betaUpdate2.func(parList)
@@ -391,7 +391,7 @@ gTildeUpdate.func <- function(parList) {
 #' @description \code{gGamma.func} is a helper function to compute the
 #'   likelihood gradient in gamma
 #'
-#' @usage \code(gGamma.func(parList))
+#' @usage \code{gGamma.func(parList)}
 gGamma.func <- function(parList) {
   M <- rowSums(parList$pList$spMat) * exp(parList$pList$lpMax)
   M <- M - sum(M) * exp(parList$gamList$gamVec - log(parList$gamList$gamDot))
@@ -405,7 +405,7 @@ gGamma.func <- function(parList) {
 #' @description \code{gGamma2.func} is a helper function to compute the
 #'   likelihood gradient in gamma at update pars
 #'
-#' @usage \code(gGamma2.func(parList))
+#' @usage \code{gGamma2.func(parList)}
 gGamma2.func <- function(parList) {
   M <- rowSums(parList$pListUpdate$spMat) * exp(parList$pListUpdate$lpMax)
   M <- M - sum(M) * exp(parList$parUpdate$gamList$gamVec -
@@ -420,7 +420,7 @@ gGamma2.func <- function(parList) {
 #' @description \code{gBeta.func} is a helper function to compute the
 #'   likelihood gradient in beta
 #'
-#' @usage \code(gBeta.func(parList))
+#' @usage \code{gBeta.func(parList)}
 gBeta.func <- function(parList) {
   M <- parList$pList$spMat %*% parList$y -
     rowSums(parList$pList$spMat *
@@ -434,7 +434,7 @@ gBeta.func <- function(parList) {
 #' @description \code{gBeta2.func} is a helper function to compute the
 #'   likelihood gradient in beta at update pars
 #'
-#' @usage \code(gBeta2.func(parList))
+#' @usage \code{gBeta2.func(parList)}
 gBeta2.func <- function(parList) {
   M <- parList$pListUpdate$spMat %*% parList$y -
     rowSums(parList$pListUpdate$spMat *
@@ -448,7 +448,7 @@ gBeta2.func <- function(parList) {
 #' @description \code{parGrad.func} is a helper function to compute the EM
 #'   parameter gradients
 #'
-#' @usage \code(parGrad.func(parList))
+#' @usage \code{parGrad.func(parList)}
 parGrad.func <- function(parList) {
   gGam <- gGamma.func(parList)
   gBeta <- gBeta.func(parList)
@@ -465,7 +465,7 @@ parGrad.func <- function(parList) {
 #' @description \code{parGradUpdate.func} is a helper function to compute the EM
 #'   parameter gradients at update pars
 #'
-#' @usage \code(parGradUpdate.func(parList))
+#' @usage \code{parGradUpdate.func(parList)}
 parGradUpdate.func <- function(parList) {
   gGam <- gGamma2.func(parList)
   gBeta <- gBeta2.func(parList)
@@ -493,7 +493,7 @@ alpha.func <- function(parList) {
 #' @description \code{parUpdate.func} is a helper function to compute the EM
 #'   parameter updates
 #'
-#' @usage \code(parUpdate.func(parList))
+#' @usage \code{parUpdate.func(parList)}
 parUpdate.func <- function(parList) {
   parVec <- c(parList$gamList$gamVec, parList$betaVec) +
     parList$alpha * parList$d
@@ -513,7 +513,7 @@ parUpdate.func <- function(parList) {
 #' @description \code{initEM.func} is a helper function to compute the EM
 #'   parameter updates
 #'
-#' @usage \code(initEM.func(y ,slope, subCDF, depth, stepInit))
+#' @usage \code{initEM.func(y ,slope, subCDF, depth, stepInit)}
 initEM.func <- function(y, slope, subCDF, depth, stepInit) {
   minD <- min(depth)
   if(minD < 0) {
@@ -569,7 +569,7 @@ initEM.func <- function(y, slope, subCDF, depth, stepInit) {
 #' @description \code{parListUpdate.func} is a helper function to update
 #'   parList when a parameter is to be removed
 #'
-#' @usage \code(parListUpdate.func(parList, doBeta = F))
+#' @usage \code{parListUpdate.func(parList, doBeta = F)}
 parListUpdate.func <- function(parList, doBeta = F) {
   if(doBeta) {
     remInd <- which.min(parList$betaVec)
@@ -595,7 +595,7 @@ parListUpdate.func <- function(parList, doBeta = F) {
 #' @description \code{calcStep.func} is a helper function to calculate the
 #'   step direction/length for the modified EM iteration
 #'
-#' @usage \code(calcStep.func(parList))
+#' @usage \code{calcStep.func(parList)}
 calcStep.func <- function(parList) {
   c1 <- 1e-3; c2 <- 0.8
 
@@ -686,7 +686,7 @@ calcStep.func <- function(parList) {
 #' @description \code{zoom.func} is a helper function to calculate the
 #'   acceptable step length from bounds
 #'
-#' @usage \code(zoom.func(parList, alphaBounds))
+#' @usage \code{zoom.func(parList, alphaBounds)}
 zoom.func <- function(parList, alphaBounds) {
   c1 <- 1e-3; c2 <- 0.8
 
