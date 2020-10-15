@@ -52,7 +52,7 @@ calcSlope <- function(counts, depth, nSubGene, nSubCell, clusterSlope,
 #' @description \code{poisSlope} is a helper function to compute poisson
 #'   regression slopes
 #'
-#' @usage \code(poisSlope(y, depth, clustVec, clustTab, pctNZ = 0.01))
+#' @usage \code{poisSlope(y, depth, clustVec, clustTab, pctNZ = 0.01)}
 poisSlope <- function(y, depth, clustVec, clustTab, pctNZ = 0.01) {
   clustNZ <- table(clustVec[y > 0])
   regInd <- clustVec %in% names(clustNZ)[clustNZ > 1]
@@ -71,8 +71,8 @@ poisSlope <- function(y, depth, clustVec, clustTab, pctNZ = 0.01) {
 #' @description \code{parPoisSlope} is a helper function to compute poisson
 #'   regression slopes
 #'
-#' @usage \code(parPoisSlope(datList, depth, clustVec, clustTab,
-#'   prll, pctNZ = 0.01))
+#' @usage \code{parPoisSlope(datList, depth, clustVec, clustTab,
+#'   prll, pctNZ = 0.01)}
 #'
 #' @importFrom Matrix Matrix
 parPoisSlope <- function(datList, depth, clustVec, clustTab, prll,

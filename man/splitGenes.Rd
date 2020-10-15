@@ -4,7 +4,7 @@
 \alias{splitGenes}
 \title{Split sparse matrix into list of columns}
 \usage{
-\code(splitGenes(counts, nCol = 40))
+\code{splitGenes(counts, nCol = 40)}
 }
 \description{
 \code{splitGenes} is a helper function to split a sparse count

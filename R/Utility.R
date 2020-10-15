@@ -48,7 +48,7 @@ setPar <- function(nCores, taskList = NULL) {
 #' @description \code{splitGenes} is a helper function to split a sparse count
 #'   matrix into a list of gene sets for parallel computation.
 #'
-#' @usage \code(splitGenes(counts, nCol = 40))
+#' @usage \code{splitGenes(counts, nCol = 40)}
 #'
 #' @importFrom Matrix Matrix
 splitGenes <- function(counts, nCol = 40) {

@@ -4,8 +4,8 @@
 \alias{parPoisSlope}
 \title{Calculate parallel regression slopes}
 \usage{
-\code(parPoisSlope(datList, depth, clustVec, clustTab,
-  prll, pctNZ = 0.01))
+\code{parPoisSlope(datList, depth, clustVec, clustTab,
+  prll, pctNZ = 0.01)}
 }
 \description{
 \code{parPoisSlope} is a helper function to compute poisson

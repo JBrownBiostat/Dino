@@ -4,7 +4,7 @@
 \alias{poisSlope}
 \title{Calculate regression slopes}
 \usage{
-\code(poisSlope(y, depth, clustVec, clustTab, pctNZ = 0.01))
+\code{poisSlope(y, depth, clustVec, clustTab, pctNZ = 0.01)}
 }
 \description{
 \code{poisSlope} is a helper function to compute poisson
