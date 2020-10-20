@@ -15,7 +15,8 @@ RoxygenNote: 7.1.1
 Suggests:
     knitr,
     rmarkdown,
-    BiocStyle
+    BiocStyle,
+    devtools
 VignetteBuilder: knitr
 Imports: 
     BiocParallel,
