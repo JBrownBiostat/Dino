@@ -14,7 +14,14 @@ LazyData: true
 RoxygenNote: 7.1.1
 Suggests:
     knitr,
-    rmarkdown
+    rmarkdown,
+    BiocStyle
 VignetteBuilder: knitr
-LinkingTo:
-Imports:
+Imports: 
+    BiocParallel,
+    BiocSingular,
+    Matrix,
+    Seurat,
+    matrixStats,
+    parallel,
+    scran

@@ -1,0 +1,173 @@
+---
+title: "Normalization by distributional resampling of high throughput single-cell RNA-sequencing data"
+authors: "Jared Brown and Christina Kendziorski"
+package: Dino
+date: 10/15/2020
+output: BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Normalization by distributional resampling of high throughput single-cell RNA-sequencing data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r Initialize, echo=FALSE, results="hide", message=FALSE}
+require(knitr)
+opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+# Introduction
+
+Over the past decade, advances in single-cell RNA-sequencing (scRNA-seq) technologies have significantly increased the sensitivity and specificity with which scientific questions can be addressed. The 10x Genomics Chromium  platform, which utilizes a droplet-based, unique-molecular-identifier (UMI) protocol, has become increasingly popular as it provides for rapid and cost effective gene expression profiling of hundreds to tens of thousands of cells.
+
+The use of UMIs has significantly reduced biases due to transcript length and PCR amplification. However, technical variability in sequencing depth remains and, consequently, normalization to adjust for sequencing depth is required to ensure accurate downstream analyses. To address this, we introduce **Dino** and `Dino`, its corresponding `R` package.
+
+**Dino** utilizes a flexible mixture of negative binomials model of gene expression to reconstruct full gene-specific expression distributions which are independent of sequencing depth. By treating zeros as expected values, the negative binomial components are applicable to shallow sequencing. Additionally, the mixture component is robust to cell heterogeneity as it accommodates multiple centers of gene expression in the distribution. By directly modeling (possibly heterogenous) gene-specific expression distributions, Dino outperforms competing approaches, especially for datasets in which the proportion of zeros is high as is typical for modern, UMI based protocols.
+
+**Dino** does not attempt to correct for batch or other sample specific effects, and will only do so to the extent that they are correlated with sequencing depth. In situations where batch effects are expected, downstream analysis may benefit from such accommodations.
+
+# Quick Start
+
+## Installation
+
+To install `Dino` from Github, run
+
+```{r Install Dino, eval = F}
+devtools::install_github('JBrownBiostat/Dino')
+```
+
+## All-in-one function
+
+`Dino` (function) is an all-in-one function to normalize raw UMI count data from 10X Cell Ranger or similar protocols. Under default options, `Dino` outputs a sparse matrix of normalized expression. `SeuratFromDino` provides one-line functionality to return a Seurat object from raw UMI counts or from a previously normalized expression matrix.
+
+```{r Quick Start, eval = F}
+library(Dino)
+
+# Return a sparse matrix of normalized expression
+Norm_Mat <- Dino(UMI_Mat)
+
+# Return a Seurat object from already normalized expression
+# Use un-transformed normalized expression
+Norm_Seurat <- SeuratFromDino(Norm_Mat, doNorm = F, doLog = F)
+
+# Return a Seurat object from UMI expression
+# Transform normalized expression as log(x + 1) to improve
+# some types of downstream analysis
+Norm_Seurat <- SeuratFromDino(UMI_Mat)
+```
+
+
+# Detailed steps
+
+## Read UMI data
+
+To facilitate concrete examples, we demonstrate normalization on a small dataset of about 3,000 peripheral blood mononuclear cells (PBMCs). This dataset, named `pbmc3k` was sequenced and published by 10X Genomics, and made esily importable through the `seurat-data` package.
+
+```{r download PBMC3K data, eval = F}
+# Download PBMC3K dataset
+# Consider performing the download manually if you with the data to be 
+# saved somewhere other than the default directory
+system("mkdir ../../VignetteData")
+download.file("https://cf.10xgenomics.com/samples/cell-exp/1.0.0/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz",
+              "../../VignetteData/PBMC3K.tar.gz")
+untar("../VignetteData/PBMC3K.tar.gz",
+      exdir = "../../VignetteData/PBMC3K_umiMatrices")
+
+# Bring PBMC3K into R environment
+library(Seurat)
+library(Matrix)
+pbmc3k <- Read10X("../VignetteData/PBMC3K_umiMatrices/filtered_gene_bc_matrices/hg19")
+print(dim(pbmc3k))
+```
+
+```{r load PBMC3K data, echo = F}
+library(Dino)
+library(Seurat)
+library(Matrix)
+pbmc3k <- Read10X("../../VignetteData/PBMC3K_umiMatrices/filtered_gene_bc_matrices/hg19")
+print(dim(pbmc3k))
+```
+
+While **Dino** was developed to normalize UMI count data, it will run on any matrix of non-negative expression data; user caution is advised if applying **Dino** to non-UMI sequencing protocols. Input formats may be sparse or dense matrices of expression with genes (features) on the rows and cells (samples) on the columns.
+
+## Clean UMI data
+
+While **Dino** can normalize the `pbmc3k` dataset as it currently exists, the resulting normalized matrix, and in particular, downstream analysis are likely to be improved by cleaning the data. Of greatest use is removing genes that are expected *not* to contain useful information. This set of genes may be case dependent, but a good rule of thumb for UMI protocols is to remove genes lacking a minimum of non-zero expression prior to normalization and analysis. 
+
+By default, **Dino** will not perform the resampling algorithm on any genes without at least 10 non-zero samples, and will rather normalize such genes by scaling with sequencing depth. In accordance with this rule, we remove such genes prior to normalization.
+
+```{r clean data}
+# Filter genes for a minimum of non-zero expression
+pbmc3k <- pbmc3k[rowSums(pbmc3k != 0) >= 10, ]
+print(dim(pbmc3k))
+```
+
+## Normalize UMI data
+
+**Dino** contains several options to tune output. Two of particular interest are `nCores` and `seed` which allow for parallelization and reproducibility respectively. By default, **Dino** runs in single-threaded mode. Choosing `nCores = 0` will utilize all available cores, and otherwise an integer number of parallel instances can be chosen. However, while `seed` sets the pseudo-random number generator in all cases, running **Dino** in parallel may break the reproducibility of outcomes.
+
+```{r normalize data, eval = F}
+# Normalize data
+pbmc3k_Norm <- Dino(pbmc3k, nCores = 4)
+```
+
+```{r normalize data background, echo = F}
+invisible(capture.output(pbmc3k_Norm <- Dino(pbmc3k, nCores = 4)))
+```
+
+## Clustering with Seurat
+
+After normalization, **Dino** makes it easy to perform data analysis. The default output is the normalized matrix in sparse format, and **Dino** additionally provides a function to transform normalized output into a **Seurat** object. We demonstrate this by running a quick clustering pipeline in **Seurat**. Much of the pipeline is modified from the tutorial at [https://satijalab.org/seurat/v3.1/pbmc3k_tutorial.html](https://satijalab.org/seurat/v3.1/pbmc3k_tutorial.html)
+
+```{R Seurat clustering}
+# Reformat normalized expression as a Seurat object
+pbmc3k_Seurat <- SeuratFromDino(pbmc3k_Norm, doNorm = F)
+
+# Cluster pbmc3k_Seurat
+pbmc3k_Seurat <- FindVariableFeatures(pbmc3k_Seurat, 
+                                      selection.method = "mvp", 
+                                      nfeatures = 1000)
+pbmc3k_Seurat <- ScaleData(pbmc3k_Seurat, 
+                           features = rownames(pbmc3k_Norm))
+pbmc3k_Seurat <- RunPCA(pbmc3k_Seurat, 
+                        features = VariableFeatures(object = pbmc3k_Seurat),
+                        verbose = F)
+pbmc3k_Seurat <- FindNeighbors(pbmc3k_Seurat, dims = 1:10)
+pbmc3k_Seurat <- FindClusters(pbmc3k_Seurat, resolution = 0.5, verbose = F)
+pbmc3k_Seurat <- RunUMAP(pbmc3k_Seurat, dims = 1:10)
+DimPlot(pbmc3k_Seurat, reduction = "umap")
+```
+
+## Alternate sequencing depth
+
+By default, **Dino** computes sequencing depth, which is corrected for in the normalized data, as the sum of expression for a cell (sample) across genes. This sum is then scaled such that the median depth is 1. For some datasets, however, it may be beneficial to run **Dino** on an alternately computed set of sequencing depths. *Note*: it is generally recommended that the median depth not be far from 1 as this corresponds to recomputing expression as though all cells had been sequenced at the median depth.
+
+A simple pipeline to compute alternate sequencing depths utilizes the **Scran** method for computing normalization scale factors, and is demonstrated below.
+
+```{r Scran depths, eval = F}
+library(scran)
+
+# Compute scran size factors
+counts <- pbmc3k; rownames(counts) <- NULL
+sce <- SingleCellExperiment(list(counts = counts))
+sce <- computeSumFactors(sce)
+scranSizes <- sizeFactors(sce)
+
+# Re-normalize data
+pbmc3k_SNorm <- Dino(pbmc3k, nCores = 4, depth = log(scranSizes))
+
+```
+
+
+# Session Information
+```{r}
+sessionInfo()
+```
+
+
+# Citation
+
+Brown, J., Ni, Z., Mohanty, C., Bacher, R., & Kendziorski, C. (2020). Normalization by distributional resampling of high throughput single-cell RNA-sequencing data. bioRxiv, (DOI pending).
+
+
+
+

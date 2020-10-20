@@ -5,8 +5,9 @@
 \title{Normalize scRNAseq data}
 \usage{
 \code{Dino(counts, nCores = 1, prec = 3, seed = 1, minNZ = 10,
-  nSub = 1e4, depth = NULL, slope = NULL, returnMeta = F,
-  emPar = list(maxIter = 100, tol = 1, conPar = 25), ...)}
+  nSubGene = 1e4, nSubCell = 1e4, depth = NULL, slope = NULL,
+  minSlope = 1/2, maxSlope = 2, clusterSlope = T,
+  returnMeta = F, emPar = list(maxIter = 100, tol = 1, conPar = 25), ...)}
 }
 \arguments{
 \item{counts}{A numeric matrix object of expression counts - usually in
@@ -18,13 +19,14 @@ which should be used. Setting nCores to 0 uses all cores as determined by
 running \code{parallel::detectCores()}}
 
 \item{prec}{A positive integer denoting the number of decimals to which to
-round depth (if estimated internally via \code{depth = NULL})and
+round depth (if estimated internally via \code{depth = NULL}) and
 normalized counts for computational efficiency.}
 
 \item{seed}{A numeric value denoting the random seed for replicability of
 results. \code{Dino} automatically records the current random seed prior
 to resetting to \emph{seed}, and resets to the recorded seed prior to
-exiting.}
+exiting. \emph{Note}, results may not be reproducible if more than 1 core
+is used when running \code{Dino}.}
 
 \item{minNZ}{A positive integer denoting the minimum number of non-zero
 counts for a gene to be normalized by the Dino algorithm. It is
