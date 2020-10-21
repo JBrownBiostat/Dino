@@ -2,7 +2,7 @@
 title: "Normalization by distributional resampling of high throughput single-cell RNA-sequencing data"
 authors: "Jared Brown and Christina Kendziorski"
 package: Dino
-date: 10/15/2020
+date: 10/21/2020
 output: BiocStyle::html_document
 vignette: >
   %\VignetteIndexEntry{Normalization by distributional resampling of high throughput single-cell RNA-sequencing data}
@@ -60,9 +60,11 @@ Norm_Seurat <- SeuratFromDino(UMI_Mat)
 
 ## Read UMI data
 
-To facilitate concrete examples, we demonstrate normalization on a small subset of sequencign data from about 3,000 peripheral blood mononuclear cells (PBMCs) published by [10X Genomics](https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k). This dataset, named `pbmcSmall` contains 600 cells and 6,000 genes and is included with the **Dino** package.
+To facilitate concrete examples, we demonstrate normalization on a small subset of sequencign data from about 3,000 peripheral blood mononuclear cells (PBMCs) published by [10X Genomics](https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k). This dataset, named `pbmcSmall` contains 750 cells and 7,500 genes and is included with the **Dino** package.
 
 ```{r load pbmcSmall data}
+set.seed(1)
+
 # Bring pbmcSmall into R environment
 library(Dino)
 library(Seurat)
@@ -91,11 +93,11 @@ print(dim(pbmcSmall))
 
 ```{r normalize data, eval = F}
 # Normalize data
-pbmcSmall_Norm <- Dino(pbmcSmall, nCores = 4)
+pbmcSmall_Norm <- Dino(pbmcSmall, nCores = 1)
 ```
 
 ```{r normalize data background, echo = F}
-invisible(capture.output(pbmcSmall_Norm <- Dino(pbmcSmall, nCores = 4)))
+invisible(capture.output(pbmcSmall_Norm <- Dino(pbmcSmall, nCores = 1)))
 ```
 
 ## Clustering with Seurat
@@ -109,15 +111,15 @@ pbmcSmall_Seurat <- SeuratFromDino(pbmcSmall_Norm, doNorm = F)
 # Cluster pbmcSmall_Seurat
 pbmcSmall_Seurat <- FindVariableFeatures(pbmcSmall_Seurat, 
                                       selection.method = "mvp", 
-                                      nfeatures = 1000)
+                                      nfeatures = 250)
 pbmcSmall_Seurat <- ScaleData(pbmcSmall_Seurat, 
                            features = rownames(pbmcSmall_Norm))
 pbmcSmall_Seurat <- RunPCA(pbmcSmall_Seurat, 
                         features = VariableFeatures(object = pbmcSmall_Seurat),
                         verbose = F)
-pbmcSmall_Seurat <- FindNeighbors(pbmcSmall_Seurat, dims = 1:5)
+pbmcSmall_Seurat <- FindNeighbors(pbmcSmall_Seurat, dims = 1:10)
 pbmcSmall_Seurat <- FindClusters(pbmcSmall_Seurat, resolution = 0.5, verbose = F)
-pbmcSmall_Seurat <- RunUMAP(pbmcSmall_Seurat, dims = 1:5)
+pbmcSmall_Seurat <- RunUMAP(pbmcSmall_Seurat, dims = 1:10)
 DimPlot(pbmcSmall_Seurat, reduction = "umap")
 ```
 
@@ -137,8 +139,7 @@ sce <- computeSumFactors(sce)
 scranSizes <- sizeFactors(sce)
 
 # Re-normalize data
-pbmcSmall_SNorm <- Dino(pbmcSmall, nCores = 4, depth = log(scranSizes))
-
+pbmcSmall_SNorm <- Dino(pbmcSmall, nCores = 1, depth = log(scranSizes))
 ```
 
 
