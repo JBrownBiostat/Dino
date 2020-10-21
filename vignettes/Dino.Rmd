@@ -60,31 +60,15 @@ Norm_Seurat <- SeuratFromDino(UMI_Mat)
 
 ## Read UMI data
 
-To facilitate concrete examples, we demonstrate normalization on a small dataset of about 3,000 peripheral blood mononuclear cells (PBMCs). This dataset, named `pbmc3k` was sequenced and published by 10X Genomics, and made esily importable through the `seurat-data` package.
+To facilitate concrete examples, we demonstrate normalization on a small subset of sequencign data from about 3,000 peripheral blood mononuclear cells (PBMCs) published by [10X Genomics](https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k). This dataset, named `pbmcSmall` contains 600 cells and 6,000 genes and is included with the **Dino** package.
 
-```{r download PBMC3K data, eval = F}
-# Download PBMC3K dataset
-# Consider performing the download manually if you with the data to be 
-# saved somewhere other than the default directory
-system("mkdir ../../VignetteData")
-download.file("https://cf.10xgenomics.com/samples/cell-exp/1.0.0/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz",
-              "../../VignetteData/PBMC3K.tar.gz")
-untar("../VignetteData/PBMC3K.tar.gz",
-      exdir = "../../VignetteData/PBMC3K_umiMatrices")
-
-# Bring PBMC3K into R environment
-library(Seurat)
-library(Matrix)
-pbmc3k <- Read10X("../VignetteData/PBMC3K_umiMatrices/filtered_gene_bc_matrices/hg19")
-print(dim(pbmc3k))
-```
-
-```{r load PBMC3K data, echo = F}
+```{r load pbmcSmall data}
+# Bring pbmcSmall into R environment
 library(Dino)
 library(Seurat)
 library(Matrix)
-pbmc3k <- Read10X("../../VignetteData/PBMC3K_umiMatrices/filtered_gene_bc_matrices/hg19")
-print(dim(pbmc3k))
+data("pbmcSmall")
+print(dim(pbmcSmall))
 ```
 
 While **Dino** was developed to normalize UMI count data, it will run on any matrix of non-negative expression data; user caution is advised if applying **Dino** to non-UMI sequencing protocols. Input formats may be sparse or dense matrices of expression with genes (features) on the rows and cells (samples) on the columns.
@@ -97,8 +81,8 @@ By default, **Dino** will not perform the resampling algorithm on any genes with
 
 ```{r clean data}
 # Filter genes for a minimum of non-zero expression
-pbmc3k <- pbmc3k[rowSums(pbmc3k != 0) >= 10, ]
-print(dim(pbmc3k))
+pbmcSmall <- pbmcSmall[rowSums(pbmcSmall != 0) >= 10, ]
+print(dim(pbmcSmall))
 ```
 
 ## Normalize UMI data
@@ -107,11 +91,11 @@ print(dim(pbmc3k))
 
 ```{r normalize data, eval = F}
 # Normalize data
-pbmc3k_Norm <- Dino(pbmc3k, nCores = 4)
+pbmcSmall_Norm <- Dino(pbmcSmall, nCores = 4)
 ```
 
 ```{r normalize data background, echo = F}
-invisible(capture.output(pbmc3k_Norm <- Dino(pbmc3k, nCores = 4)))
+invisible(capture.output(pbmcSmall_Norm <- Dino(pbmcSmall, nCores = 4)))
 ```
 
 ## Clustering with Seurat
@@ -120,21 +104,21 @@ After normalization, **Dino** makes it easy to perform data analysis. The defaul
 
 ```{R Seurat clustering}
 # Reformat normalized expression as a Seurat object
-pbmc3k_Seurat <- SeuratFromDino(pbmc3k_Norm, doNorm = F)
+pbmcSmall_Seurat <- SeuratFromDino(pbmcSmall_Norm, doNorm = F)
 
-# Cluster pbmc3k_Seurat
-pbmc3k_Seurat <- FindVariableFeatures(pbmc3k_Seurat, 
+# Cluster pbmcSmall_Seurat
+pbmcSmall_Seurat <- FindVariableFeatures(pbmcSmall_Seurat, 
                                       selection.method = "mvp", 
                                       nfeatures = 1000)
-pbmc3k_Seurat <- ScaleData(pbmc3k_Seurat, 
-                           features = rownames(pbmc3k_Norm))
-pbmc3k_Seurat <- RunPCA(pbmc3k_Seurat, 
-                        features = VariableFeatures(object = pbmc3k_Seurat),
+pbmcSmall_Seurat <- ScaleData(pbmcSmall_Seurat, 
+                           features = rownames(pbmcSmall_Norm))
+pbmcSmall_Seurat <- RunPCA(pbmcSmall_Seurat, 
+                        features = VariableFeatures(object = pbmcSmall_Seurat),
                         verbose = F)
-pbmc3k_Seurat <- FindNeighbors(pbmc3k_Seurat, dims = 1:10)
-pbmc3k_Seurat <- FindClusters(pbmc3k_Seurat, resolution = 0.5, verbose = F)
-pbmc3k_Seurat <- RunUMAP(pbmc3k_Seurat, dims = 1:10)
-DimPlot(pbmc3k_Seurat, reduction = "umap")
+pbmcSmall_Seurat <- FindNeighbors(pbmcSmall_Seurat, dims = 1:5)
+pbmcSmall_Seurat <- FindClusters(pbmcSmall_Seurat, resolution = 0.5, verbose = F)
+pbmcSmall_Seurat <- RunUMAP(pbmcSmall_Seurat, dims = 1:5)
+DimPlot(pbmcSmall_Seurat, reduction = "umap")
 ```
 
 ## Alternate sequencing depth
@@ -147,13 +131,13 @@ A simple pipeline to compute alternate sequencing depths utilizes the **Scran** 
 library(scran)
 
 # Compute scran size factors
-counts <- pbmc3k; rownames(counts) <- NULL
+counts <- pbmcSmall; rownames(counts) <- NULL
 sce <- SingleCellExperiment(list(counts = counts))
 sce <- computeSumFactors(sce)
 scranSizes <- sizeFactors(sce)
 
 # Re-normalize data
-pbmc3k_SNorm <- Dino(pbmc3k, nCores = 4, depth = log(scranSizes))
+pbmcSmall_SNorm <- Dino(pbmcSmall, nCores = 4, depth = log(scranSizes))
 
 ```
 
