@@ -5,7 +5,7 @@ package: Dino
 date: 10/21/2020
 output: BiocStyle::html_document
 vignette: >
-  %\VignetteIndexEntry{Dino Vignette}
+  %\VignetteIndexEntry{Normalization by distributional resampling of high throughput single-cell RNA-sequencing data}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
