@@ -96,6 +96,7 @@ calcDev <- function(y, depth, depthRep, slope = 1) {
   )
   ret <- ret[!duplicated(ret$pct), ]
   ret <- ret[!is.infinite(ret$quant), ]
+  ret <- ret[!duplicated(ret$quant), ]
   if(min(ret$pct) != 0) {
     ret <- rbind(
       ret, c(0, min(ret$quant) - 100)

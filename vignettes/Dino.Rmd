@@ -6,8 +6,8 @@ date: 10/21/2020
 output: BiocStyle::html_document
 vignette: >
   %\VignetteIndexEntry{Dino Vignette}
-  %\VignetteEngine{knitr::knitr}
-  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r Initialize, echo=FALSE, results="hide", message=FALSE}
