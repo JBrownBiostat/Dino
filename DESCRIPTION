@@ -3,7 +3,7 @@ Type: Package
 Title: Normalization of Single-Cell mRNA Sequencing Data
 Version: 0.6.1
 Author@R: c(
-    person("Jared", "Brown", email = "brownj@biostat.wisc.edu",
+    person("Jared", "Brown", email = "brownj at biostat.wisc.edu",
     role = c("aut", "cre")))
 Description: Dino normalizes single-cell, mRNA sequencing data to correct for
     technical variation, particularly sequencing depth, prior to downstream
@@ -18,7 +18,7 @@ Suggests:
     BiocStyle,
     devtools
 VignetteBuilder: knitr
-Imports: 
+Imports:
     BiocParallel,
     BiocSingular,
     Matrix,

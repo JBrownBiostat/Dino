@@ -110,8 +110,7 @@ pbmcSmall_Seurat <- SeuratFromDino(pbmcSmall_Norm, doNorm = F)
 
 # Cluster pbmcSmall_Seurat
 pbmcSmall_Seurat <- FindVariableFeatures(pbmcSmall_Seurat, 
-                                      selection.method = "mvp", 
-                                      nfeatures = 250)
+                                      selection.method = "mvp")
 pbmcSmall_Seurat <- ScaleData(pbmcSmall_Seurat, 
                            features = rownames(pbmcSmall_Norm))
 pbmcSmall_Seurat <- RunPCA(pbmcSmall_Seurat, 
