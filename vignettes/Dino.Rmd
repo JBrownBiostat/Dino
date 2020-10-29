@@ -150,8 +150,14 @@ sessionInfo()
 
 # Citation
 
-Brown, J., Ni, Z., Mohanty, C., Bacher, R., & Kendziorski, C. (2020). Normalization by distributional resampling of high throughput single-cell RNA-sequencing data. bioRxiv, (DOI pending).
+If you use *Dino* in your analysis, please cite our paper:
 
+Brown, J., Ni, Z., Mohanty, C., Bacher, R., and Kendziorski, C. (2020). Normalization by distributional resampling of high throughput single-cell RNA-sequencing data. bioRxiv. [https://doi.org/10.1101/2020.10.28.359901](https://doi.org/10.1101/2020.10.28.359901).
 
+# Contact
+
+Jared Brown: brownj AT biostat DOT wisc DOT edu
+
+Christina Kendziorski: kendzior AT biostat DOT wisc DOT edu
 
 
