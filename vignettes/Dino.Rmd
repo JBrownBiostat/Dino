@@ -2,7 +2,7 @@
 title: "Normalization by distributional resampling of high throughput single-cell RNA-sequencing data"
 authors: "Jared Brown and Christina Kendziorski"
 package: Dino
-date: 10/21/2020
+date: 03/05/2021
 output: BiocStyle::html_document
 vignette: >
   %\VignetteIndexEntry{Normalization by distributional resampling of high throughput single-cell RNA-sequencing data}
@@ -17,11 +17,10 @@ opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 # Introduction
 
-Over the past decade, advances in single-cell RNA-sequencing (scRNA-seq) technologies have significantly increased the sensitivity and specificity with which scientific questions can be addressed. The 10x Genomics Chromium  platform, which utilizes a droplet-based, unique-molecular-identifier (UMI) protocol, has become increasingly popular as it provides for rapid and cost effective gene expression profiling of hundreds to tens of thousands of cells.
+Over the past decade, advances in single-cell RNA-sequencing (scRNA-seq) technologies have significantly increased the sensitivity and specificity with which cellular transcriptional dynamics can be analyzed. Further, parallel increases in the number cells which can be simultaneously sequenced have allowed for novel analysis pipelines including the description of transcriptional trajectories and the discovery of rare sub-populations of cells. The development of droplet-based, unique-molecular-identifier (UMI) protocols such as Drop-seq, inDrop, and the 10x Genomics Chromium platform have significantly contributed to these advances. In particular, the commercially available 10x Genomics platform has allowed the rapid and cost effective gene expression profiling of hundreds to tens of thousands of cells across many studies to date.
+The use of UMIs in the 10x Genomics and related platforms has augmented these developments in sequencing technology by tagging individual mRNA transcripts with unique cell and transcript specific identifiers. In this way, biases due to transcript length and PCR amplification have been significantly reduced. However, technical variability in sequencing depth remains and, consequently, normalization to adjust for sequencing depth is required to ensure accurate downstream analyses. To address this, we introduce **Dino** and `Dino`, its corresponding `R` package.
 
-The use of UMIs has significantly reduced biases due to transcript length and PCR amplification. However, technical variability in sequencing depth remains and, consequently, normalization to adjust for sequencing depth is required to ensure accurate downstream analyses. To address this, we introduce **Dino** and `Dino`, its corresponding `R` package.
-
-**Dino** utilizes a flexible mixture of negative binomials model of gene expression to reconstruct full gene-specific expression distributions which are independent of sequencing depth. By treating zeros as expected values, the negative binomial components are applicable to shallow sequencing. Additionally, the mixture component is robust to cell heterogeneity as it accommodates multiple centers of gene expression in the distribution. By directly modeling (possibly heterogenous) gene-specific expression distributions, Dino outperforms competing approaches, especially for datasets in which the proportion of zeros is high as is typical for modern, UMI based protocols.
+**Dino** utilizes a flexible mixture of Negative Binomials model of gene expression to reconstruct full gene-specific expression distributions which are independent of sequencing depth. By giving exact zeros positive probability, the Negative Binomial components are applicable to shallow sequencing (high proportions of zeros). Additionally, the mixture component is robust to cell heterogeneity as it accommodates multiple centers of gene expression in the distribution. By directly modeling (possibly heterogenous) gene-specific expression distributions, Dino outperforms competing approaches, especially for datasets in which the proportion of zeros is high as is typical for modern, UMI based protocols.
 
 **Dino** does not attempt to correct for batch or other sample specific effects, and will only do so to the extent that they are correlated with sequencing depth. In situations where batch effects are expected, downstream analysis may benefit from such accommodations.
 
@@ -132,13 +131,303 @@ A simple pipeline to compute alternate sequencing depths utilizes the **Scran** 
 library(scran)
 
 # Compute scran size factors
-counts <- pbmcSmall; rownames(counts) <- NULL
-sce <- SingleCellExperiment(list(counts = counts))
-sce <- computeSumFactors(sce)
-scranSizes <- sizeFactors(sce)
+scranSizes <- calculateSumFactors(pbmcSmall)
 
 # Re-normalize data
 pbmcSmall_SNorm <- Dino(pbmcSmall, nCores = 1, depth = log(scranSizes))
+```
+
+
+# Method
+## Model
+**Dino** models observed UMI counts as a mixture of Negative Binomial random variables. The Negative Binomial distribution can, however, be decomposed into a hierarchical Gamma-Poisson distribution, so for gene $g$ and cell $j$, the **Dino** model for UMI counts is:
+$$y_{gj}\sim f^{P}(\lambda_{gj}\delta_{j})\\
+\lambda_{gj}\sim\sum_{K}\pi_{k}f^{G}\left(\frac{\mu_{gk}}{\theta_g},\theta_g\right)$$
+where $f^{P}$ is a Poisson distribution parameterized by mean $\lambda_{gj}\delta_{j}$ and $f^{G}$ is a Gamma distribution parameterized by shape $\mu_{gk}/\theta_g$ and scale $\theta_g$. $\delta_{j}$ is the cell-specific sequencing depth, $\lambda_{gj}$ is the latent level of gene/cell-specific expression independent of depth, component probabilities $\pi_{k}$ sum to 1, the Gamma distribution is parameterized such that $\mu_{gk}$ denotes the distribution mean, and the Gamma scale paramter, $\theta_g$, is constant across mixture components.
+
+Following model fitting for a fixed gene through an accelerated EM algorithm, **Dino** produces normalized expression values by resampling from the posterior distribution of the latent expression parameters, $\lambda_{gj}$. It can be shown that the distribution on the $\lambda_{j}$ (dropping the gene-specific subscript $g$ as calculations are repreated across genes) is a mixture of Gammas, specifically:
+$$\mathbb{P}(\lambda_{j}|y_{j},\delta_j)=\sum_{K}\tau_{kj}f^{G}\left(\frac{\mu_{k}}{\theta}+\gamma y_{j},\frac{1}{\frac{1}{\theta}+\gamma\delta_j}\right)$$
+where $\tau_{kj}$ denotes the conditional probability that $\lambda_{gj}$ was sampled from mixture component $k$ and $\gamma$ is a global concentration parameter. The $\tau_{kj}$ are estimated as part of the implementation of the EM algorithm in **Dino**. The adjustment from the concentration parameter can be seen as a bias in the normalized values towards a scale-factor version of normalization, since, in the limit of $\gamma$, the normalized expression for cell $j$ converges to $y_j/\delta_j$. Default values of $\gamma=15$ have proven successful.
+
+## Mixture components $K$
+Approximating the flexibility of a non-parametric method, **Dino** uses a large number of mixture components, $K$, in order to capture the full heterogeneity of expression that may exist for a given gene. The gene-specific number of components is estimated as the square root of the number of strictly positive UMI counts for a given gene. By default, $K$ is limited to be no larger than 100. In simulation, large values of $K$ are shown to successfully reconstruct both unimodal and multimodal underlying distributions. For example, when UMI counts are estimated under a single negative binomial distribution, the **Dino** fitted prior distribution (black, right panel) which is used to sample normalized expression closely matches the theoretical sampling distribution (red, right panel). Likewise, the fitted means ($\mu_k$ in the model, gray lines, left panel) span the range of the simulated data (heat map of counts, left panel), but concentrate around the theoretical mean of the sampling distribution (red, left panel).
+
+```{r Unimodal Simulation, echo = F}
+library(ggplot2)
+library(gridExtra)
+library(ggpubr)
+library(grid)
+
+themeObj <- theme(
+  title = element_text(size = 17),
+  plot.subtitle = element_text(size = 15),
+  axis.title = element_text(size = 14),
+  axis.text = element_text(size = 12),
+  strip.text = element_text(size = 14),
+  legend.title = element_text(size = 14),
+  legend.text = element_text(size = 12)
+)
+
+
+###############
+## Functions ##
+###############
+gamDens.func <- function(y, lamVec, tauVec, phi, n = 1e3) {
+  x <- seq(
+    quantile(y, 1 / (2 * n)),
+    quantile(y, 1 - 1 / (2 * n)),
+    length = n
+  )
+  if(x[1] == 0) {x <- x[-1]}
+  yMat <- mapply(function(lamPar, tauPar, x, phi) {
+    dgamma(x, lamPar / phi, scale = phi) * tauPar
+  }, lamVec, tauVec, MoreArgs = list(x = x, phi = phi))
+  y <- rowSums(yMat)
+  return(data.frame(
+    x = x,
+    y = y
+  ))
+}
+
+dinoFit.func <- function(y, LS) {
+  if(length(y) > 1e4) {
+    subInd <- sample.int(length(y), 1e4)
+  } else {
+    subInd <- 1:length(y)
+  }
+  depth <- LS
+  slope <- 1
+  depthRep <- Dino:::calcDepthRep(depth[subInd])
+  prec <- 3
+  emPar <- list(maxIter = 100, tol = 1, conPar = 25, maxK = 100)
+  
+  outDev <- Dino:::calcDev(y[subInd], depth[subInd], depthRep, slope)
+  cdfList <- list(
+    eCDF_fun = approxfun(
+      x = outDev$quant,
+      y = outDev$pct,
+      yleft = 0, yright = 1
+    ),
+    eQuant_fun = approxfun(
+      x = outDev$pct,
+      y = outDev$quant,
+      yleft = -Inf, yright = max(outDev$quant)
+    )
+  )
+  
+  # Run EM
+  minD <- min(depth)
+  if(minD < 0) {
+    fitSlope <- min(slope, (exp(minD - 3) - 1) / (exp(minD) - 1))
+  } else {
+    fitSlope <- max(slope, (exp(minD - 3) - 1) / (exp(minD) - 1))
+  }
+  parList <- Dino:::initEM.func(
+    y = y[subInd],
+    slope = fitSlope,
+    subCDF = cdfList,
+    depth = depth[subInd],
+    stepInit = 5, 
+    emPar
+  )
+  
+  nUpdate <- emPar$maxIter
+  deltaStop <- emPar$tol
+  iter <- 0
+  
+  while(iter < nUpdate) {
+    iter <- iter + 1
+    
+    parList$d <- -parList$gTilde$gTilde +
+      parList$S %*% parList$g$g
+    parList$alpha <- -1
+    
+    gamInd <- parList$gamList$gamVec + parList$alpha * parList$d[1:parList$J]
+    if(!all(gamInd >= -75)) {
+      if(parList$J > 2) {
+        parList <- Dino:::parListUpdate.func(parList)
+        parList$lLik <- Dino:::lLik.func(parList)
+        parList$S <- parList$S * 0
+      } else {break}
+    }
+    
+    betaInd <- parList$betaVec +
+      parList$alpha * parList$d[(parList$J + 1):(2 * parList$J)]
+    if(!all(betaInd > -75)) {
+      if(parList$J > 2) {
+        parList <- Dino:::parListUpdate.func(parList, doBeta = T)
+        parList$lLik <- Dino:::lLik.func(parList)
+        parList$S <- parList$S * 0
+      } else {break}
+    }
+    if(any(gamInd > 75) | any(betaInd > 75) | max(gamInd) - min(gamInd) > log(2 * length(subInd))) {
+      parList$S <- parList$S * 0
+    }
+    
+    parList <- Dino:::calcStep.func(parList)
+    
+    dTheta <- parList$parUpdate$parVec -
+      c(parList$gamList$gamVec, parList$betaVec)
+    dg <- parList$gUpdate$g - parList$g$g
+    parList$dgTilde <- Dino:::gTildeUpdate.func(parList)
+    dgTilde <- parList$dgTilde$gTilde - parList$gTilde$gTilde
+    
+    dThetaStar <- -dgTilde + parList$S %*% dg
+    parList$S <- parList$S +
+      c(1 + (t(dg) %*% dThetaStar) / (t(dg) %*% dTheta)) *
+      (dTheta %*% t(dTheta)) / c(t(dg) %*% dTheta) -
+      (dThetaStar %*% t(dTheta) + t(dThetaStar %*% t(dTheta))) /
+      c(t(dg) %*% dTheta)
+    
+    parList$pList <- parList$pListUpdate
+    parList$gamList <- parList$parUpdate$gamList
+    parList$betaVec <- parList$parUpdate$betaVec
+    parList$g <- parList$gUpdate
+    parList$gTilde <- parList$dgTilde
+    if(parList$lLikUpdate - parList$lLik <= deltaStop) {
+      break
+    }
+    parList$lLik <- parList$lLikUpdate
+  }
+  
+  parList$pList$spMat <- parList$pList$spMat * exp(parList$pList$lpMax)
+  lamPar <- pmax(exp(parList$betaVec), .Machine$double.xmin * 1e1)
+  bw <- tryCatch({
+    suppressWarnings(bw.ucv(lamPar))
+  }, error = function(e) {
+    tryCatch({
+      bw.nrd(lamPar)
+    }, error = function(e) {
+      1 / sqrt(parList$J)
+    })
+  })
+  phi <- bw
+  
+  # Update model for all points
+  parList$y <- y
+  parList$depth <- exp(depth) * fitSlope - fitSlope + 1
+  parList$pList <- Dino:::lpMat.func(parList)
+  
+  tauPar <- parList$gamList$gamVec - max(parList$gamList$gamVec)
+  tauPar <- exp(tauPar)
+  tauPar <- tauPar / sum(tauPar)
+  tauPar <- pmax(tauPar, .Machine$double.xmin * 1e1)
+  tauPar <- tauPar / sum(tauPar)
+  lamPar <- pmax(exp(parList$betaVec), .Machine$double.xmin * 1e1)
+  parList$pList$spMat <- parList$pList$spMat * exp(parList$pList$lpMax)
+  
+  shapeVec <- lamPar / bw
+  concVec <- emPar$conPar
+  
+  return(list(
+    pMat = parList$pList$spMat,
+    lamPar = lamPar,
+    phi = phi,
+    tauPar = tauPar,
+    concVec = concVec
+  ))
+}
+
+plotSim.func <- function(muVec, dVec, k) {
+  n <- k ^ 2
+  LS <- c()
+  sampY <- c()
+  for(i in 1:length(muVec)) {
+    newLS <- rnorm(n / length(muVec), sd = 0.5)
+    sampY <- c(
+      sampY, 
+      sapply(exp(newLS), function(lsPar) {
+        rnbinom(1, mu = muVec[i] * lsPar, size = lsPar / dVec[i])
+      })
+    )
+    LS <- c(LS, newLS)
+  }
+  while(sum(sampY > 0) < n + 1) {
+    for(i in 1:length(muVec)) {
+      newLS <- rnorm(1, sd = 0.5)
+      sampY <- c(
+        sampY, 
+        sapply(exp(newLS), function(lsPar) {
+          rnbinom(1, mu = muVec[i] * lsPar, size = lsPar / dVec[i])
+        })
+      )
+      LS <- c(LS, newLS)
+    }
+  }
+  LS <- LS[1:which(cumsum(sampY > 0) == n + 1)]
+  sampY <- sampY[1:which(cumsum(sampY > 0) == n + 1)]
+  
+  dinoOut <- dinoFit.func(sampY, LS)
+  
+  dinoDens <- gamDens.func(sampY, dinoOut$lamPar, dinoOut$tauPar, dinoOut$phi)
+  
+  x.dens <- seq(
+    1e-3,
+    quantile(sampY, 1 - 1 / (2 * n)) * 2,
+    length = 1e3
+  )
+  if(x.dens[1] == 0) {x.dens <- x.dens[-1]}
+  y.dens <- rowMeans(mapply(function(lamPar, dPar) {
+    dnbinom(floor(x.dens + 0.5), mu = lamPar, size = 1 / dPar)
+  }, muVec, dVec))
+  
+  plotDat <- data.frame(
+    x = c(x.dens, dinoDens$x),
+    y = c(y.dens, dinoDens$y),
+    model = rep(c("NB", "Dino"), c(length(x.dens), length(dinoDens$x)))
+  )
+  p2 <- ggplot(plotDat, aes(x = x, y = y, color = model)) + 
+    theme_classic() + 
+    geom_line() + 
+    scale_color_manual(values = 1:2) + 
+    labs(x = "Expression", y = "Density", color = "Model", title = "Reference vs.\nFitted distribution") + 
+    themeObj
+  xInd <- which.max(y.dens < 1e-3 * max(y.dens) & x.dens > x.dens[which.max(y.dens)])
+  if(xInd > 1) {
+    p2 <- p2 + 
+      xlim(c(0, x.dens[which.max(y.dens < 1e-3 * max(y.dens) & x.dens > x.dens[which.max(y.dens)])]))
+  }
+  if(max(y.dens) < max(dinoDens$y)) {
+    p2 <- p2 + 
+      ylim(c(0, min(c(1.025 * max(dinoDens$y), 1.5 * max(y.dens)))))
+  }
+  p2
+  
+  plotDat <- data.frame(
+    y = log1p(sampY),
+    LS = LS
+  )
+  p1 <- ggplot(plotDat, aes(x = LS, y = y)) + 
+    theme_classic() + 
+    geom_hex(aes(fill = log10(..count..))) + 
+    scale_fill_viridis_c() + 
+    labs(x = "log-Depth", y = "Expression (log)", title = "Fitted means", fill = "Count\n(log10)")
+  for(i in 1:length(dinoOut$lamPar)) {
+    p1 <- p1 + 
+      geom_abline(slope = 1, intercept = log1p(dinoOut$lamPar[i]), col = 1, alpha = 0.5, lwd = 0.75)
+  }
+  for(i in 1:length(muVec)) {
+    p1 <- p1 + 
+      geom_abline(slope = 1, intercept = log1p(muVec[i]), col = 2, lwd = 1.5)
+  }
+  p1 <- p1 + 
+    themeObj
+  
+  p <- grid.arrange(p1, p2, nrow = 1, 
+                    top = textGrob(paste0("K = ", k), gp = gpar(fontsize = 17)))
+  return(p)
+}
+
+#############
+## Run Sim ##
+#############
+p100 <- plotSim.func(10, 0.2, 100)
+```
+
+Simulating data from a pair of Negative Binomial distributions with different means and different dispersion parameters yields similar results in the multimodal case.
+
+```{r Multimodal Simulation, echo = F}
+p100 <- plotSim.func(c(5, 20), c(0.2, 0.1), 100)
 ```
 
 

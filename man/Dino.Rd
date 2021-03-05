@@ -7,7 +7,8 @@
 \code{Dino(counts, nCores = 1, prec = 3, seed = 1, minNZ = 10,
   nSubGene = 1e4, nSubCell = 1e4, depth = NULL, slope = NULL,
   minSlope = 1/2, maxSlope = 2, clusterSlope = T,
-  returnMeta = F, emPar = list(maxIter = 100, tol = 1, conPar = 25), ...)}
+  returnMeta = F,
+  emPar = list(maxIter = 100, tol = 0.1, conPar = 15, maxK = 100), ...)}
 }
 \arguments{
 \item{counts}{A numeric matrix object of expression counts - usually in
@@ -69,9 +70,10 @@ and slope) should be returned.}
 \emph{maxIter} denotes the maximum number of model updates. \emph{tol}
 denotes the cutoff threshold for reductions in the log likelihood
 function. \emph{conPar} denotes the concentration parameter for the
-resampling. \emph{conPar = 0} implies full resampling from the fitted
+resampling. \emph{conPar = 1} implies full resampling from the fitted
 distribution. As \emph{conPar} increases, the normalized expression
-converges to the scale-factor normalized values.}
+converges to the scale-factor normalized values. \emph{maxK} denotes the
+maximum number of mixture components in the mixture model.}
 
 \item{...}{Additional parameters to pass to \code{Scran::quickCluster}.}
 }

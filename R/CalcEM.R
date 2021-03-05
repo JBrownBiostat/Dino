@@ -39,7 +39,8 @@ resampCounts <- function(countMat, depth, depthRep, slope,
       slope = fitSlope,
       subCDF = cdfList,
       depth = depth[subInd],
-      stepInit = 5
+      stepInit = 5,
+      emPar
     )
 
     nUpdate <- emPar$maxIter
@@ -101,18 +102,24 @@ resampCounts <- function(countMat, depth, depthRep, slope,
       parList$lLik <- parList$lLikUpdate
     }
 
+    lamPar <- pmax(exp(parList$betaVec), .Machine$double.xmin * 1e1)
+    bw <- tryCatch({
+      suppressWarnings(bw.ucv(lamPar))
+    }, error = function(e) {
+      tryCatch({
+        bw.nrd(lamPar)
+      }, error = function(e) {
+        1
+      })
+    })
+    phi <- min(bw, 1)
+
     # Update model for all points
     parList$y <- y
     parList$depth <- exp(depth) * fitSlope - fitSlope + 1
     parList$pList <- lpMat.func(parList)
-
-    tauPar <- parList$gamList$gamVec - max(parList$gamList$gamVec)
-    tauPar <- exp(tauPar)
-    tauPar <- tauPar / sum(tauPar)
-    tauPar <- pmax(tauPar, .Machine$double.xmin * 1e1)
-    tauPar <- tauPar / sum(tauPar)
-    lamPar <- pmax(exp(parList$betaVec), .Machine$double.xmin * 1e1)
     parList$pList$spMat <- parList$pList$spMat * exp(parList$pList$lpMax)
+    lamPar <- pmax(exp(parList$betaVec), .Machine$double.xmin * 1e1)
 
     # Resample counts
     distVec <- apply(parList$pList$spMat[-parList$J, , drop = F],
@@ -121,30 +128,12 @@ resampCounts <- function(countMat, depth, depthRep, slope,
       which.min(runif(1) > c(cumsum(pVec), 1))
     })
 
-    bwVec <- sapply(1:25, function(k) {
-      gamSamp <- lamPar[sample.int(parList$J,
-                                   parList$J,
-                                   replace = T,
-                                   prob = tauPar)]
-      tryCatch({
-        suppressWarnings(bw.ucv(gamSamp))
-      }, error = function(e) {
-        tryCatch({
-          bw.nrd(gamSamp)
-        }, error = function(e) {
-          1 / sqrt(parList$J)
-        })
-      }
-      )
-    })
-    bw <- mean(bwVec)
-
-    shapeVec <- lamPar / bw
+    shapeVec <- lamPar / phi
     concVec <- emPar$conPar
 
     normVec <- rgamma(n = length(parList$y),
                       shape = parList$y * concVec + shapeVec[distVec],
-                      scale = 1 / (parList$depth * concVec + 1 / bw))
+                      scale = 1 / (parList$depth * concVec + 1 / phi))
     normVec <- round(normVec, prec)
 
     return(normVec)
@@ -513,8 +502,8 @@ parUpdate.func <- function(parList) {
 #' @description \code{initEM.func} is a helper function to compute the EM
 #'   parameter updates
 #'
-#' @usage \code{initEM.func(y ,slope, subCDF, depth, stepInit)}
-initEM.func <- function(y, slope, subCDF, depth, stepInit) {
+#' @usage \code{initEM.func(y ,slope, subCDF, depth, stepInit, emPar)}
+initEM.func <- function(y, slope, subCDF, depth, stepInit, emPar) {
   minD <- min(depth)
   if(minD < 0) {
     slope <- min(slope, (exp(minD - 3) - 1) / (exp(minD) - 1))
@@ -524,7 +513,7 @@ initEM.func <- function(y, slope, subCDF, depth, stepInit) {
   parList <- list(y = y,
                   depth = exp(depth) * slope - slope + 1)
   parList$J <- min(
-    200,
+    emPar$maxK,
     max(
       2,
       ceiling(sqrt(sum(parList$y > 0)))
@@ -724,4 +713,76 @@ zoom.func <- function(parList, alphaBounds) {
       lLikLow <- parList$lLikUpdate
     }
   }
+}
+
+
+#' Solve likelihood given dispersion parameter
+#'
+#' @description \code{fPhi.func} is a helper function to calculate the
+#'   likelihood of the observed data given the fitted mixture model
+#'   for the purpose of finding the maximum likelihood dispersion
+#'   parameter.
+#'
+#' @usage \code{fPhi.func(phi, yVec, muMat, tMat, yInd, LS)}
+fPhi.func <- function(phi, yVec, muMat, tMat, yInd, LS) {
+  phiVec <- phi / LS
+  lMat <- log1p(muMat * rep(phiVec, rep(nrow(muMat), length(LS))))
+  return(
+    sum(
+      tMat * (
+        lMat * rep(
+          phiVec ^ -1 + yVec,
+          rep(nrow(muMat), length(LS))
+        )
+      )
+    ) -
+      sum(mapply(function(y, phi) {
+        sum(log1p(phi * (0:(y - 1))))
+      }, y = yVec[yInd], phi = phiVec[yInd]))
+  )
+}
+
+
+#' Solve likelihood gradient given dispersion parameter
+#'
+#' @description \code{gPhi.func} is a helper function to calculate the
+#'   gradient of the likelihood of the observed data given the fitted
+#'   mixture model for the purpose of finding the maximum likelihood
+#'   dispersion parameter.
+#'
+#' @usage \code{gPhi.func(phi, yVec, muMat, tMat, yInd, LS)}
+gPhi.func <- function(phi, yVec, muMat, tMat, yInd, LS) {
+  phiVec <- phi / LS
+  matRep <- rep(nrow(muMat), length(LS))
+  return(
+    sum(
+      tMat * (
+        (muMat * rep(phiVec ^ -1 + yVec, matRep)) /
+          (phi * muMat + rep(LS, matRep)) -
+          log1p(muMat * rep(phiVec, matRep)) /
+          rep(phiVec ^ 2 * LS, matRep)
+      )
+    ) -
+      sum(mapply(function(y, phi, LS) {
+        sum((0:(y - 1)) / LS / (1 + phi * (0:(y - 1))))
+      }, y = yVec[yInd], phi = phiVec[yInd], LS = LS[yInd]))
+  )
+}
+
+
+#' Find the maximum likelihood dispersion parameter
+#'
+#' @description \code{solvePhi.func} is a helper function to estimate the
+#'   dispersion parameter of the observed data given the fitted mixture model.
+#'
+#' @usage \code{solvePhi.func(yVec, muMat, bw, tMat, LS)}
+solvePhi.func <- function(yVec, muMat, bw, tMat, LS) {
+  yInd <- yVec > 0
+  optim(bw,
+        fPhi.func, gPhi.func,
+        yVec = yVec, muMat = muMat,
+        tMat = tMat, yInd = yInd, LS = LS,
+        method = "L-BFGS-B",
+        lower = 1e-4, upper = 1e4,
+        control = list(maxit = 10))$par
 }

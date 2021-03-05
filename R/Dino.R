@@ -9,7 +9,8 @@
 #' @usage \code{Dino(counts, nCores = 1, prec = 3, seed = 1, minNZ = 10,
 #'   nSubGene = 1e4, nSubCell = 1e4, depth = NULL, slope = NULL,
 #'   minSlope = 1/2, maxSlope = 2, clusterSlope = T,
-#'   returnMeta = F, emPar = list(maxIter = 100, tol = 1, conPar = 25), ...)}
+#'   returnMeta = F,
+#'   emPar = list(maxIter = 100, tol = 0.1, conPar = 15, maxK = 100), ...)}
 #'
 #' @param counts A numeric matrix object of expression counts - usually in
 #'   dgCMatrix format for memory efficiency. Column names denote cells
@@ -57,9 +58,10 @@
 #'   \emph{maxIter} denotes the maximum number of model updates. \emph{tol}
 #'   denotes the cutoff threshold for reductions in the log likelihood
 #'   function. \emph{conPar} denotes the concentration parameter for the
-#'   resampling. \emph{conPar = 0} implies full resampling from the fitted
+#'   resampling. \emph{conPar = 1} implies full resampling from the fitted
 #'   distribution. As \emph{conPar} increases, the normalized expression
-#'   converges to the scale-factor normalized values.
+#'   converges to the scale-factor normalized values. \emph{maxK} denotes the
+#'   maximum number of mixture components in the mixture model.
 #' @param ... Additional parameters to pass to \code{Scran::quickCluster}.
 #'
 #' @return \code{Dino} by default returns a matrix of normalized expression
@@ -77,7 +79,8 @@ Dino <- function(counts, nCores = 1, prec = 3, seed = 1, minNZ = 10,
                  nSubGene = 1e4, nSubCell = 1e4, depth = NULL, slope = NULL,
                  minSlope = 1/2, maxSlope = 2, clusterSlope = T,
                  returnMeta = F,
-                 emPar = list(maxIter = 100, tol = 1, conPar = 25), ...) {
+                 emPar = list(maxIter = 100, tol = 0.1, conPar = 15, maxK = 100),
+                 ...) {
   ## Perform argument checks
   checkOut <- check_DinoIn(counts, nCores, prec, seed, minNZ,
                            nSubGene, nSubCell, depth, slope, returnMeta)

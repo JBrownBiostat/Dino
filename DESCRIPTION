@@ -1,13 +1,14 @@
 Package: Dino
 Type: Package
 Title: Normalization of Single-Cell mRNA Sequencing Data
-Version: 0.6.1
+Version: 0.6.2
 Author@R: c(
     person("Jared", "Brown", email = "brownj at biostat.wisc.edu",
     role = c("aut", "cre")))
 Description: Dino normalizes single-cell, mRNA sequencing data to correct for
     technical variation, particularly sequencing depth, prior to downstream
     analysis.
+Depends: R (>= 3.5.0)
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
@@ -16,7 +17,11 @@ Suggests:
     knitr,
     rmarkdown,
     BiocStyle,
-    devtools
+    devtools,
+    ggplot2,
+    gridExtra,
+    ggpubr,
+    grid
 VignetteBuilder: knitr
 Imports:
     BiocParallel,

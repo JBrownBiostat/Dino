@@ -4,7 +4,7 @@
 \alias{initEM.func}
 \title{Initialize EM steps}
 \usage{
-\code{initEM.func(y ,slope, subCDF, depth, stepInit)}
+\code{initEM.func(y ,slope, subCDF, depth, stepInit, emPar)}
 }
 \description{
 \code{initEM.func} is a helper function to compute the EM
