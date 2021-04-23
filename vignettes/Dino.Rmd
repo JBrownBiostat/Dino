@@ -131,17 +131,17 @@ library(SingleCellExperiment)
 pbmc_SCE <- SingleCellExperiment(assays = list("counts" = pbmcSmall))
 
 # Run Dino
-invisible(capture.output(pbmc_SCE <- Dino_SCE(pbmc_SCE)))
+pbmc_SCE <- Dino_SCE(pbmc_SCE)
 str(normcounts(pbmc_SCE))
 ```
 
-```{r SinglleCellExperiment Background}
+```{r SinglleCellExperiment Background, echo = F}
 # Reformatting pbmcSmall as a SingleCellExperiment
 library(SingleCellExperiment)
 pbmc_SCE <- SingleCellExperiment(assays = list("counts" = pbmcSmall))
 
 # Run Dino
-pbmc_SCE <- Dino_SCE(pbmc_SCE)
+invisible(capture.output(pbmc_SCE <- Dino_SCE(pbmc_SCE)))
 str(normcounts(pbmc_SCE))
 ```
 
