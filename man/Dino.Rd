@@ -4,11 +4,11 @@
 \alias{Dino}
 \title{Normalize scRNAseq data}
 \usage{
-\code{Dino(counts, nCores = 1, prec = 3, seed = 1, minNZ = 10,
-  nSubGene = 1e4, nSubCell = 1e4, depth = NULL, slope = NULL,
-  minSlope = 1/2, maxSlope = 2, clusterSlope = T,
-  returnMeta = F,
-  emPar = list(maxIter = 100, tol = 0.1, conPar = 15, maxK = 100), ...)}
+Dino(counts, nCores = 1, prec = 3, minNZ = 10,
+    nSubGene = 1e4, nSubCell = 1e4, depth = NULL, slope = NULL,
+    minSlope = 1/2, maxSlope = 2, clusterSlope = TRUE,
+    returnMeta = FALSE, doRQS = FALSE,
+    emPar = list(maxIter = 100, tol = 0.1, conPar = 15, maxK = 100), ...)
 }
 \arguments{
 \item{counts}{A numeric matrix object of expression counts - usually in
@@ -22,12 +22,6 @@ running \code{parallel::detectCores()}}
 \item{prec}{A positive integer denoting the number of decimals to which to
 round depth (if estimated internally via \code{depth = NULL}) and
 normalized counts for computational efficiency.}
-
-\item{seed}{A numeric value denoting the random seed for replicability of
-results. \code{Dino} automatically records the current random seed prior
-to resetting to \emph{seed}, and resets to the recorded seed prior to
-exiting. \emph{Note}, results may not be reproducible if more than 1 core
-is used when running \code{Dino}.}
 
 \item{minNZ}{A positive integer denoting the minimum number of non-zero
 counts for a gene to be normalized by the Dino algorithm. It is
@@ -48,10 +42,11 @@ sequencing depth. \code{Dino} defaults to defining depth as the
 median-centering transformation.}
 
 \item{slope}{A numeric scalar denoting the count-depth relationship on
-the log-log scale. Typical values are close to 1 (implying a unit increase
-in depth corresponds to a unit increase in expected counts on the log-log
-scale), but may be higher, particularly in the case of non-UMI
-protocols. \code{Dino} defaults to estimating \emph{slope} internally.}
+the log-log scale. Typical values are close to 1 (implying a unit
+increase in depth corresponds to a unit increase in expected counts on
+the log-log scale), but may be higher, particularly in the case of
+non-UMI protocols. \code{Dino} defaults to estimating \emph{slope}
+internally.}
 
 \item{minSlope}{A numeric scalar denoting the minimum slope. Fitted slopes
 below this value will return a warning and be set to 1}
@@ -66,6 +61,12 @@ cells are pre-clustered, cluster is used as a factor in the regression.}
 \item{returnMeta}{A logical indicating whether metadata (sequencing depth
 and slope) should be returned.}
 
+\item{doRQS}{A logical indicating how normalization resampling is to be done.
+By default (F), normalization is done by resampling from the full
+posterior distribution. Alternately, restricted quantile sampling (RQS)
+can be performed to enforce stronger preservation of expression ranks
+in normalized data. Currently RQS is considered experimental.}
+
 \item{emPar}{A list of parameters to send to the EM algorithm.
 \emph{maxIter} denotes the maximum number of model updates. \emph{tol}
 denotes the cutoff threshold for reductions in the log likelihood
@@ -79,9 +80,9 @@ maximum number of mixture components in the mixture model.}
 }
 \value{
 \code{Dino} by default returns a matrix of normalized expression
-  with identical dimensions as \emph{counts}. If \emph{returnMeta=T}, then
-  \code{Dino} returns a list of normalized expression, sequencing depth, and
-  slope.
+    with identical dimensions as \emph{counts}. If \emph{returnMeta = TRUE},
+    then \code{Dino} returns a list of normalized expression, sequencing
+    depth, and slope.
 }
 \description{
 \code{Dino} removes cell-to-cell variation in observed
@@ -89,4 +90,23 @@ counts due to the effects of sequencing depth from single-cell mRNA
 sequencing experiments. \code{Dino} was particularly designed with UMI
 based protocols in mind, but is applicable to non-UMI based chemistries
 in the library preparation stage of sequencing.
+}
+\examples{
+# raw data
+data("pbmcSmall")
+str(pbmcSmall)
+
+# run Dino on raw expression matrix
+pbmcSmall_Norm <- Dino(pbmcSmall)
+str(pbmcSmall_Norm)
+
+}
+\references{
+Brown, J., Ni, Z., Mohanty, C., Bacher, R. and Kendziorski, C.
+    (2020) "Normalization by distributional resampling of high throughput
+    single-cell RNA-sequencing data." bioRxiv.
+    \href{https://doi.org/10.1101/2020.10.28.359901}{https://doi.org/10.1101/2020.10.28.359901}
+}
+\author{
+Jared Brown
 }

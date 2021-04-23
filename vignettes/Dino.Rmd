@@ -30,7 +30,7 @@ The use of UMIs in the 10x Genomics and related platforms has augmented these de
 
 To install `Dino` from Github, run
 
-```{r Install Dino, eval = F}
+```{r Install Dino, eval = FALSE}
 devtools::install_github('JBrownBiostat/Dino')
 ```
 
@@ -38,7 +38,7 @@ devtools::install_github('JBrownBiostat/Dino')
 
 `Dino` (function) is an all-in-one function to normalize raw UMI count data from 10X Cell Ranger or similar protocols. Under default options, `Dino` outputs a sparse matrix of normalized expression. `SeuratFromDino` provides one-line functionality to return a Seurat object from raw UMI counts or from a previously normalized expression matrix.
 
-```{r Quick Start, eval = F}
+```{r Quick Start, eval = FALSE}
 library(Dino)
 
 # Return a sparse matrix of normalized expression
@@ -46,7 +46,7 @@ Norm_Mat <- Dino(UMI_Mat)
 
 # Return a Seurat object from already normalized expression
 # Use un-transformed normalized expression
-Norm_Seurat <- SeuratFromDino(Norm_Mat, doNorm = F, doLog = F)
+Norm_Seurat <- SeuratFromDino(Norm_Mat, doNorm = FALSE, doLog = FALSE)
 
 # Return a Seurat object from UMI expression
 # Transform normalized expression as log(x + 1) to improve
@@ -59,7 +59,7 @@ Norm_Seurat <- SeuratFromDino(UMI_Mat)
 
 ## Read UMI data
 
-To facilitate concrete examples, we demonstrate normalization on a small subset of sequencign data from about 3,000 peripheral blood mononuclear cells (PBMCs) published by [10X Genomics](https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k). This dataset, named `pbmcSmall` contains 600 cells and 6,000 genes and is included with the **Dino** package.
+To facilitate concrete examples, we demonstrate normalization on a small subset of sequencing data from about 3,000 peripheral blood mononuclear cells (PBMCs) published by [10X Genomics](https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k). This dataset, named `pbmcSmall` contains 600 cells and 6,000 genes and is included with the **Dino** package.
 
 ```{r load pbmcSmall data}
 set.seed(1)
@@ -82,20 +82,20 @@ By default, **Dino** will not perform the resampling algorithm on any genes with
 
 ```{r clean data}
 # Filter genes for a minimum of non-zero expression
-pbmcSmall <- pbmcSmall[rowSums(pbmcSmall != 0) >= 10, ]
+pbmcSmall <- pbmcSmall[rowSums(pbmcSmall != 0) >= 20, ]
 print(dim(pbmcSmall))
 ```
 
 ## Normalize UMI data
 
-**Dino** contains several options to tune output. Two of particular interest are `nCores` and `seed` which allow for parallelization and reproducibility respectively. By default, **Dino** runs in single-threaded mode. Choosing `nCores = 0` will utilize all available cores, and otherwise an integer number of parallel instances can be chosen. However, while `seed` sets the pseudo-random number generator in all cases, running **Dino** in parallel may break the reproducibility of outcomes.
+**Dino** contains several options to tune output. One of particular interest is `nCores` which allows for parallel computation of normalized expression. By default, **Dino** runs in single-threaded mode. Choosing `nCores = 0` will utilize all available cores, and otherwise an integer number of parallel instances can be chosen.
 
-```{r normalize data, eval = F}
+```{r normalize data, eval = FALSE}
 # Normalize data
 pbmcSmall_Norm <- Dino(pbmcSmall, nCores = 1)
 ```
 
-```{r normalize data background, echo = F}
+```{r normalize data background, echo = FALSE}
 invisible(capture.output(pbmcSmall_Norm <- Dino(pbmcSmall, nCores = 1)))
 ```
 
@@ -105,7 +105,7 @@ After normalization, **Dino** makes it easy to perform data analysis. The defaul
 
 ```{R Seurat clustering}
 # Reformat normalized expression as a Seurat object
-pbmcSmall_Seurat <- SeuratFromDino(pbmcSmall_Norm, doNorm = F)
+pbmcSmall_Seurat <- SeuratFromDino(pbmcSmall_Norm, doNorm = FALSE)
 
 # Cluster pbmcSmall_Seurat
 pbmcSmall_Seurat <- FindVariableFeatures(pbmcSmall_Seurat, 
@@ -114,11 +114,25 @@ pbmcSmall_Seurat <- ScaleData(pbmcSmall_Seurat,
                            features = rownames(pbmcSmall_Norm))
 pbmcSmall_Seurat <- RunPCA(pbmcSmall_Seurat, 
                         features = VariableFeatures(object = pbmcSmall_Seurat),
-                        verbose = F)
+                        verbose = FALSE)
 pbmcSmall_Seurat <- FindNeighbors(pbmcSmall_Seurat, dims = 1:10)
-pbmcSmall_Seurat <- FindClusters(pbmcSmall_Seurat, resolution = 0.5, verbose = F)
+pbmcSmall_Seurat <- FindClusters(pbmcSmall_Seurat, verbose = FALSE)
 pbmcSmall_Seurat <- RunUMAP(pbmcSmall_Seurat, dims = 1:10)
 DimPlot(pbmcSmall_Seurat, reduction = "umap")
+```
+
+## Normalizing data formatted as SingleCellExperiment
+
+**Dino** additionally supports the normalization of datasets formatted as *SingleCellExperiment*. As with the **Seurat** pipeline, this functionality is implemented through the use of a wrapper function. We demonstrate this by quickly converting the *pbmcSmall* dataset to a *SingleCellExperiment* object and then normalizing.
+
+```{r SinglleCellExperiment}
+# Reformatting pbmcSmall as a SingleCellExperiment
+library(SingleCellExperiment)
+pbmc_SCE <- SingleCellExperiment(assays = list("counts" = pbmcSmall))
+
+# Run Dino
+pbmc_SCE <- Dino_SCE(pbmc_SCE)
+str(normcounts(pbmc_SCE))
 ```
 
 ## Alternate sequencing depth
@@ -127,7 +141,7 @@ By default, **Dino** computes sequencing depth, which is corrected for in the no
 
 A simple pipeline to compute alternate sequencing depths utilizes the **Scran** method for computing normalization scale factors, and is demonstrated below.
 
-```{r Scran depths, eval = F}
+```{r Scran depths, eval = FALSE}
 library(scran)
 
 # Compute scran size factors
@@ -152,7 +166,7 @@ where $\tau_{kj}$ denotes the conditional probability that $\lambda_{gj}$ was sa
 ## Mixture components $K$
 Approximating the flexibility of a non-parametric method, **Dino** uses a large number of mixture components, $K$, in order to capture the full heterogeneity of expression that may exist for a given gene. The gene-specific number of components is estimated as the square root of the number of strictly positive UMI counts for a given gene. By default, $K$ is limited to be no larger than 100. In simulation, large values of $K$ are shown to successfully reconstruct both unimodal and multimodal underlying distributions. For example, when UMI counts are estimated under a single negative binomial distribution, the **Dino** fitted prior distribution (black, right panel) which is used to sample normalized expression closely matches the theoretical sampling distribution (red, right panel). Likewise, the fitted means ($\mu_k$ in the model, gray lines, left panel) span the range of the simulated data (heat map of counts, left panel), but concentrate around the theoretical mean of the sampling distribution (red, left panel).
 
-```{r Unimodal Simulation, echo = F}
+```{r Unimodal Simulation, echo = FALSE}
 library(ggplot2)
 library(gridExtra)
 library(ggpubr)
@@ -172,7 +186,7 @@ themeObj <- theme(
 ###############
 ## Functions ##
 ###############
-gamDens.func <- function(y, lamVec, tauVec, phi, n = 1e3) {
+gamDens_func <- function(y, lamVec, tauVec, phi, n = 1e3) {
   x <- seq(
     quantile(y, 1 / (2 * n)),
     quantile(y, 1 - 1 / (2 * n)),
@@ -189,7 +203,7 @@ gamDens.func <- function(y, lamVec, tauVec, phi, n = 1e3) {
   ))
 }
 
-dinoFit.func <- function(y, LS) {
+dinoFit_func <- function(y, LS) {
   if(length(y) > 1e4) {
     subInd <- sample.int(length(y), 1e4)
   } else {
@@ -222,7 +236,7 @@ dinoFit.func <- function(y, LS) {
   } else {
     fitSlope <- max(slope, (exp(minD - 3) - 1) / (exp(minD) - 1))
   }
-  parList <- Dino:::initEM.func(
+  parList <- Dino:::initEM_func(
     y = y[subInd],
     slope = fitSlope,
     subCDF = cdfList,
@@ -245,8 +259,8 @@ dinoFit.func <- function(y, LS) {
     gamInd <- parList$gamList$gamVec + parList$alpha * parList$d[1:parList$J]
     if(!all(gamInd >= -75)) {
       if(parList$J > 2) {
-        parList <- Dino:::parListUpdate.func(parList)
-        parList$lLik <- Dino:::lLik.func(parList)
+        parList <- Dino:::parListUpdate_func(parList)
+        parList$lLik <- Dino:::lLik_func(parList)
         parList$S <- parList$S * 0
       } else {break}
     }
@@ -255,21 +269,22 @@ dinoFit.func <- function(y, LS) {
       parList$alpha * parList$d[(parList$J + 1):(2 * parList$J)]
     if(!all(betaInd > -75)) {
       if(parList$J > 2) {
-        parList <- Dino:::parListUpdate.func(parList, doBeta = T)
-        parList$lLik <- Dino:::lLik.func(parList)
+        parList <- Dino:::parListUpdate_func(parList, doBeta = TRUE)
+        parList$lLik <- Dino:::lLik_func(parList)
         parList$S <- parList$S * 0
       } else {break}
     }
-    if(any(gamInd > 75) | any(betaInd > 75) | max(gamInd) - min(gamInd) > log(2 * length(subInd))) {
+    if(any(gamInd > 75) | any(betaInd > 75) | max(gamInd) - min(gamInd) > 
+       log(2 * length(subInd))) {
       parList$S <- parList$S * 0
     }
     
-    parList <- Dino:::calcStep.func(parList)
+    parList <- Dino:::calcStep_func(parList)
     
     dTheta <- parList$parUpdate$parVec -
       c(parList$gamList$gamVec, parList$betaVec)
     dg <- parList$gUpdate$g - parList$g$g
-    parList$dgTilde <- Dino:::gTildeUpdate.func(parList)
+    parList$dgTilde <- Dino:::gTildeUpdate_func(parList)
     dgTilde <- parList$dgTilde$gTilde - parList$gTilde$gTilde
     
     dThetaStar <- -dgTilde + parList$S %*% dg
@@ -306,7 +321,7 @@ dinoFit.func <- function(y, LS) {
   # Update model for all points
   parList$y <- y
   parList$depth <- exp(depth) * fitSlope - fitSlope + 1
-  parList$pList <- Dino:::lpMat.func(parList)
+  parList$pList <- Dino:::lpMat_func(parList)
   
   tauPar <- parList$gamList$gamVec - max(parList$gamList$gamVec)
   tauPar <- exp(tauPar)
@@ -328,7 +343,7 @@ dinoFit.func <- function(y, LS) {
   ))
 }
 
-plotSim.func <- function(muVec, dVec, k) {
+plotSim_func <- function(muVec, dVec, k) {
   n <- k ^ 2
   LS <- c()
   sampY <- c()
@@ -357,9 +372,9 @@ plotSim.func <- function(muVec, dVec, k) {
   LS <- LS[1:which(cumsum(sampY > 0) == n + 1)]
   sampY <- sampY[1:which(cumsum(sampY > 0) == n + 1)]
   
-  dinoOut <- dinoFit.func(sampY, LS)
+  dinoOut <- dinoFit_func(sampY, LS)
   
-  dinoDens <- gamDens.func(sampY, dinoOut$lamPar, dinoOut$tauPar, dinoOut$phi)
+  dinoDens <- gamDens_func(sampY, dinoOut$lamPar, dinoOut$tauPar, dinoOut$phi)
   
   x.dens <- seq(
     1e-3,
@@ -380,12 +395,15 @@ plotSim.func <- function(muVec, dVec, k) {
     theme_classic() + 
     geom_line() + 
     scale_color_manual(values = 1:2) + 
-    labs(x = "Expression", y = "Density", color = "Model", title = "Reference vs.\nFitted distribution") + 
+    labs(x = "Expression", y = "Density", color = "Model", 
+         title = "Reference vs.\nFitted distribution") + 
     themeObj
-  xInd <- which.max(y.dens < 1e-3 * max(y.dens) & x.dens > x.dens[which.max(y.dens)])
+  xInd <- which.max(y.dens < 1e-3 * max(y.dens) & 
+                      x.dens > x.dens[which.max(y.dens)])
   if(xInd > 1) {
     p2 <- p2 + 
-      xlim(c(0, x.dens[which.max(y.dens < 1e-3 * max(y.dens) & x.dens > x.dens[which.max(y.dens)])]))
+      xlim(c(0, x.dens[which.max(y.dens < 1e-3 * max(y.dens) & 
+                                   x.dens > x.dens[which.max(y.dens)])]))
   }
   if(max(y.dens) < max(dinoDens$y)) {
     p2 <- p2 + 
@@ -401,10 +419,12 @@ plotSim.func <- function(muVec, dVec, k) {
     theme_classic() + 
     geom_hex(aes(fill = log10(..count..))) + 
     scale_fill_viridis_c() + 
-    labs(x = "log-Depth", y = "Expression (log)", title = "Fitted means", fill = "Count\n(log10)")
+    labs(x = "log-Depth", y = "Expression (log)", 
+         title = "Fitted means", fill = "Count\n(log10)")
   for(i in 1:length(dinoOut$lamPar)) {
     p1 <- p1 + 
-      geom_abline(slope = 1, intercept = log1p(dinoOut$lamPar[i]), col = 1, alpha = 0.5, lwd = 0.75)
+      geom_abline(slope = 1, intercept = log1p(dinoOut$lamPar[i]), 
+                  col = 1, alpha = 0.5, lwd = 0.75)
   }
   for(i in 1:length(muVec)) {
     p1 <- p1 + 
@@ -421,13 +441,13 @@ plotSim.func <- function(muVec, dVec, k) {
 #############
 ## Run Sim ##
 #############
-p100 <- plotSim.func(10, 0.2, 100)
+p100 <- plotSim_func(10, 0.2, 100)
 ```
 
 Simulating data from a pair of Negative Binomial distributions with different means and different dispersion parameters yields similar results in the multimodal case.
 
-```{r Multimodal Simulation, echo = F}
-p100 <- plotSim.func(c(5, 20), c(0.2, 0.1), 100)
+```{r Multimodal Simulation, echo = FALSE}
+p100 <- plotSim_func(c(5, 20), c(0.2, 0.1), 100)
 ```
 
 
@@ -441,7 +461,15 @@ sessionInfo()
 
 If you use *Dino* in your analysis, please cite our paper:
 
-Brown, J., Ni, Z., Mohanty, C., Bacher, R., and Kendziorski, C. (2020). Normalization by distributional resampling of high throughput single-cell RNA-sequencing data. bioRxiv. [https://doi.org/10.1101/2020.10.28.359901](https://doi.org/10.1101/2020.10.28.359901).
+Brown, J., Ni, Z., Mohanty, C., Bacher, R., and Kendziorski, C. (2020). "Normalization by distributional resampling of high throughput single-cell RNA-sequencing data." bioRxiv. [https://doi.org/10.1101/2020.10.28.359901](https://doi.org/10.1101/2020.10.28.359901).
+
+Other work referenced in this vignette include:
+
+Satija, R., Farrell, J.A., Gennert, D., Schier, A.F. and Regev, A. (2015). "Spatial reconstruction of single-cell gene expression data." Nat. Biotechnol., 33, 495–502.
+[https://doi.org/10.1038/nbt.3192](https://doi.org/10.1038/nbt.3192)
+
+Amezquita, R.A., Lun, A.T.L., Becht, E., Carey, V.J., Carpp, L.N., Geistlinger, L., Marini, F., Rue-Albrecht, K., Risso, D., Soneson, C., et al. (2020). "Orchestrating single-cell analysis with Bioconductor." Nat. Methods, 17, 137–145.
+[https://doi.org/10.1038/s41592-019-0654-x](https://doi.org/10.1038/s41592-019-0654-x)
 
 # Contact
 

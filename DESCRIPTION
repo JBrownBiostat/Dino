@@ -1,19 +1,37 @@
 Package: Dino
 Type: Package
 Title: Normalization of Single-Cell mRNA Sequencing Data
-Version: 0.6.2
-Author@R: c(
-    person("Jared", "Brown", email = "brownj at biostat.wisc.edu",
-    role = c("aut", "cre")))
+Version: 0.99.0
+Authors@R: c(
+    person("Jared", "Brown", email = "brownj@biostat.wisc.edu",
+    role = c("aut", "cre"), comment = c(ORCID = "0000-0002-9151-4386")),
+    person("Christina", "Kendziorski", role= c("ctb")))
+biocViews:
+    Normalization,
+    RNASeq,
+    SingleCell,
+    Sequencing,
+    GeneExpression,
+    Transcriptomics,
+    Regression
 Description: Dino normalizes single-cell, mRNA sequencing data to correct for
     technical variation, particularly sequencing depth, prior to downstream
-    analysis.
-Depends: R (>= 3.5.0)
+    analysis. The approach produces a matrix of corrected expression for which
+    the dependency between sequencing depth and the full distribution of
+    normalized expression; many existing methods aim to remove  only the
+    dependency between sequencing depth and the mean of the normalized
+    expression. This is particuarly useful in the context of highly sparse
+    datasets such as those produced by 10X genomics and other uninque
+    molecular identifier (UMI) based microfluidics protocols for which the
+    depth-dependent proportion of zeros in the raw expression data can
+    otherwise present a challenge.
+Depends: R (>= 4.0.0)
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
 Suggests:
+    testthat (>= 2.1.0),
     knitr,
     rmarkdown,
     BiocStyle,
@@ -26,8 +44,15 @@ VignetteBuilder: knitr
 Imports:
     BiocParallel,
     BiocSingular,
+    SummarizedExperiment,
+    SingleCellExperiment,
     Matrix,
     Seurat,
     matrixStats,
     parallel,
-    scran
+    scran,
+    grDevices,
+    stats,
+    methods
+URL: https://github.com/JBrownBiostat/Dino
+BugReports: https://github.com/JBrownBiostat/Dino/issues
