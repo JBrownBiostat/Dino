@@ -2,7 +2,7 @@
 title: "Normalization by distributional resampling of high throughput single-cell RNA-sequencing data"
 authors: "Jared Brown and Christina Kendziorski"
 package: Dino
-date: 03/05/2021
+date: 04/23/2021
 output: BiocStyle::html_document
 vignette: >
   %\VignetteIndexEntry{Normalization by distributional resampling of high throughput single-cell RNA-sequencing data}
