@@ -59,7 +59,7 @@ Norm_Seurat <- SeuratFromDino(UMI_Mat)
 
 ## Read UMI data
 
-To facilitate concrete examples, we demonstrate normalization on a small subset of sequencing data from about 3,000 peripheral blood mononuclear cells (PBMCs) published by [10X Genomics](https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k). This dataset, named `pbmcSmall` contains 600 cells and 6,000 genes and is included with the **Dino** package.
+To facilitate concrete examples, we demonstrate normalization on a small subset of sequencing data from about 3,000 peripheral blood mononuclear cells (PBMCs) published by [10X Genomics](https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k). This dataset, named `pbmcSmall` contains 500 cells and 7,082 genes and is included with the **Dino** package.
 
 ```{r load pbmcSmall data}
 set.seed(1)
@@ -78,7 +78,7 @@ While **Dino** was developed to normalize UMI count data, it will run on any mat
 
 While **Dino** can normalize the `pbmcSmall` dataset as it currently exists, the resulting normalized matrix, and in particular, downstream analysis are likely to be improved by cleaning the data. Of greatest use is removing genes that are expected *not* to contain useful information. This set of genes may be case dependent, but a good rule of thumb for UMI protocols is to remove genes lacking a minimum of non-zero expression prior to normalization and analysis. 
 
-By default, **Dino** will not perform the resampling algorithm on any genes without at least 10 non-zero samples, and will rather normalize such genes by scaling with sequencing depth. In accordance with this rule, we remove such genes prior to normalization.
+By default, **Dino** will not perform the resampling algorithm on any genes without at least 10 non-zero samples, and will rather normalize such genes by scaling with sequencing depth. To demonstrate a stricter threshold, we remove genes lacking at least 20 non-zero samples prior to normalization.
 
 ```{r clean data}
 # Filter genes for a minimum of non-zero expression
@@ -125,7 +125,17 @@ DimPlot(pbmcSmall_Seurat, reduction = "umap")
 
 **Dino** additionally supports the normalization of datasets formatted as *SingleCellExperiment*. As with the **Seurat** pipeline, this functionality is implemented through the use of a wrapper function. We demonstrate this by quickly converting the *pbmcSmall* dataset to a *SingleCellExperiment* object and then normalizing.
 
-```{r SinglleCellExperiment}
+```{r SinglleCellExperiment, eval = FALSE}
+# Reformatting pbmcSmall as a SingleCellExperiment
+library(SingleCellExperiment)
+pbmc_SCE <- SingleCellExperiment(assays = list("counts" = pbmcSmall))
+
+# Run Dino
+invisible(capture.output(pbmc_SCE <- Dino_SCE(pbmc_SCE)))
+str(normcounts(pbmc_SCE))
+```
+
+```{r SinglleCellExperiment Background}
 # Reformatting pbmcSmall as a SingleCellExperiment
 library(SingleCellExperiment)
 pbmc_SCE <- SingleCellExperiment(assays = list("counts" = pbmcSmall))
