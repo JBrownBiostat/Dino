@@ -1,19 +1,21 @@
 Package: Dino
 Type: Package
 Title: Normalization of Single-Cell mRNA Sequencing Data
-Version: 0.99.0
+Version: 0.99.1
 Authors@R: c(
     person("Jared", "Brown", email = "brownj@biostat.wisc.edu",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0002-9151-4386")),
     person("Christina", "Kendziorski", role= c("ctb")))
 biocViews:
+    Software,
     Normalization,
     RNASeq,
     SingleCell,
     Sequencing,
     GeneExpression,
     Transcriptomics,
-    Regression
+    Regression,
+    CellBasedAssays
 Description: Dino normalizes single-cell, mRNA sequencing data to correct for
     technical variation, particularly sequencing depth, prior to downstream
     analysis. The approach produces a matrix of corrected expression for which
@@ -28,7 +30,7 @@ Description: Dino normalizes single-cell, mRNA sequencing data to correct for
 Depends: R (>= 4.0.0)
 License: GPL-3
 Encoding: UTF-8
-LazyData: true
+LazyData: false
 RoxygenNote: 7.1.1
 Suggests:
     testthat (>= 2.1.0),
@@ -46,6 +48,7 @@ Imports:
     BiocSingular,
     SummarizedExperiment,
     SingleCellExperiment,
+    S4Vectors,
     Matrix,
     Seurat,
     matrixStats,

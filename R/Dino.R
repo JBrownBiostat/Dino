@@ -6,7 +6,7 @@
 #' based protocols in mind, but is applicable to non-UMI based chemistries
 #' in the library preparation stage of sequencing.
 #'
-#' @usage Dino(counts, nCores = 1, prec = 3, minNZ = 10,
+#' @usage Dino(counts, nCores = 2, prec = 3, minNZ = 10,
 #'     nSubGene = 1e4, nSubCell = 1e4, depth = NULL, slope = NULL,
 #'     minSlope = 1/2, maxSlope = 2, clusterSlope = TRUE,
 #'     returnMeta = FALSE, doRQS = FALSE,
@@ -92,16 +92,15 @@
 #' @importFrom Matrix colSums
 #' @importFrom Matrix rowSums
 #' @importFrom Matrix t
-Dino <- function(counts, nCores = 1, prec = 3, minNZ = 10,
-                 nSubGene = 1e4, nSubCell = 1e4, depth = NULL, slope = NULL,
-                 minSlope = 1/2, maxSlope = 2, clusterSlope = TRUE,
-                 returnMeta = FALSE, doRQS = FALSE,
-                 emPar = list(maxIter = 100, tol = 0.1,
-                              conPar = 15, maxK = 100),
-                 ...) {
+Dino <- function(counts, nCores = 2, prec = 3, minNZ = 10,
+            nSubGene = 1e4, nSubCell = 1e4, depth = NULL, slope = NULL,
+            minSlope = 1/2, maxSlope = 2, clusterSlope = TRUE,
+            returnMeta = FALSE, doRQS = FALSE,
+            emPar = list(maxIter = 100, tol = 0.1, conPar = 15, maxK = 100),
+            ...) {
     ## Perform argument checks
     checkOut <- check_DinoIn(counts, nCores, prec, minNZ,
-                             nSubGene, nSubCell, depth, slope, returnMeta)
+        nSubGene, nSubCell, depth, slope, returnMeta)
     counts <- t(checkOut$counts)
     nCores <- checkOut$nCores
     prec <- checkOut$prec
@@ -128,21 +127,21 @@ Dino <- function(counts, nCores = 1, prec = 3, minNZ = 10,
     if(is.null(slope)) {
         message("Calculating regression slope")
         slope <- calcSlope(counts, depth, nSubGene, nSubCell, clusterSlope,
-                           nCores, ...)
+                    nCores, ...)
         if(slope < minSlope) {
-            warning(paste0("Fitted slope (",
-                           round(slope, 3),
-                           ") below minSlope (",
-                           round(minSlope, 3),
-                           ") -- setting slope = 1"))
+            warning(cat("Fitted slope (",
+                round(slope, 3),
+                ") below minSlope (",
+                round(minSlope, 3),
+                ") -- setting slope = 1"))
             slope = 1
         }
         if(slope > maxSlope) {
-            warning(paste0("Fitted slope (",
-                           round(slope, 3),
-                           ") above maxSlope (",
-                           round(maxSlope, 3),
-                           ") -- setting slope = 1"))
+            warning(cat("Fitted slope (",
+                round(slope, 3),
+                ") above maxSlope (",
+                round(maxSlope, 3),
+                ") -- setting slope = 1"))
             slope = 1
         }
     }
@@ -158,7 +157,7 @@ Dino <- function(counts, nCores = 1, prec = 3, minNZ = 10,
     dinoGenes <- which(colSums(counts[subInd, ] > 0) >= minNZ)
     libGenes <- which(!(seq_len(ncol(counts[subInd, ])) %in% dinoGenes))
     if(length(libGenes) > 0){
-        warning(paste0("Some genes have expression non-zero expression below ",
+        warning(cat("Some genes have expression non-zero expression below ",
             "'minNZ' when subsampled\nand will be normalized via
             scale-factor"))
         libCounts <- counts[, libGenes, drop = FALSE]
@@ -173,13 +172,13 @@ Dino <- function(counts, nCores = 1, prec = 3, minNZ = 10,
         normCounts_lib <- libCounts / exp(depth)
         colnames(normCounts_lib) <- colnames(counts)[libGenes]
         normCounts_Dino <- parResampCounts(countList, depth, depthRep, slope,
-                                           prec, subInd, prll, doRQS, emPar)
+            prec, subInd, prll, doRQS, emPar)
         colnames(normCounts_Dino) <- colnames(counts)[dinoGenes]
         normCounts <- cbind(normCounts_Dino, normCounts_lib)
         normCounts <- normCounts[, colnames(counts)]
     } else {
         normCounts <- parResampCounts(countList, depth, depthRep, slope,
-                                      prec, subInd, prll, doRQS, emPar)
+            prec, subInd, prll, doRQS, emPar)
     }
 
     colnames(normCounts) <- colnames(counts)
@@ -362,6 +361,7 @@ SeuratFromDino <- function(counts, doNorm = TRUE, doLog = TRUE, ...) {
 #' @import SingleCellExperiment
 #' @importFrom SummarizedExperiment assayNames
 #' @importFrom methods is
+#' @importFrom S4Vectors metadata
 Dino_SCE <- function(SCE, ...) {
     if(!is(SCE, "SingleCellExperiment")) {
         stop("'SCE' is not a SingleCellExperiment")

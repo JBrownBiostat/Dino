@@ -3,7 +3,7 @@
 \docType{data}
 \name{pbmcSmall}
 \alias{pbmcSmall}
-\title{Subset of 750 peripheral blood mononuclear cells (PBMCs) from a healthy donor}
+\title{Subset of 500 peripheral blood mononuclear cells (PBMCs) from a healthy donor}
 \format{
 An object of class \code{"dgCMatrix"}.
 }

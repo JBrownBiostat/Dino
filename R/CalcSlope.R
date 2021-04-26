@@ -7,7 +7,7 @@
 #' @importFrom stats density
 #' @importFrom stats approxfun
 calcSlope <- function(counts, depth, nSubGene, nSubCell, clusterSlope,
-                      nCores, ...) {
+                nCores, ...) {
     if(nrow(counts) > nSubCell) {
         subInd <- sample.int(nrow(counts), nSubCell)
         subCounts <- counts[subInd, ]
@@ -19,7 +19,7 @@ calcSlope <- function(counts, depth, nSubGene, nSubCell, clusterSlope,
     prll <- setPar(nCores)
     if(clusterSlope) {
         clustVec <- quickCluster(x = t(subCounts), BSPARAM = IrlbaParam(),
-                                 BPPARAM = prll, ...)
+                                    BPPARAM = prll, ...)
     } else {
         clustVec <- rep(1, nSubCell)
     }
@@ -31,13 +31,13 @@ calcSlope <- function(counts, depth, nSubGene, nSubCell, clusterSlope,
     muDens <- density(geneMu)
     muFunc <- approxfun(muDens$x, muDens$y)
     geneSamp <- sample(which(subGenes),
-                       min(sum(subGenes), nSubGene),
-                       prob = 1 / muFunc(geneMu[subGenes]))
+                    min(sum(subGenes), nSubGene),
+                    prob = 1 / muFunc(geneMu[subGenes]))
     datList <- splitGenes(subCounts[, geneSamp], nCol = 40)
     clustTab <- table(clustVec)
     prll <- setPar(nCores, datList)
     slopeVec <- parPoisSlope(datList, subDepth, clustVec, clustTab,
-                             prll, pctNZ = 0.01)
+                    prll, pctNZ = 0.01)
 
     return(mean(slopeVec))
 }
@@ -63,17 +63,17 @@ poisSlope <- function(y, depth, clustVec, clustTab, pctNZ = 0.01) {
 #
 #' @importFrom Matrix Matrix
 parPoisSlope <- function(datList, depth, clustVec, clustTab, prll,
-                         pctNZ = 0.01) {
+                    pctNZ = 0.01) {
     slopeVec <- bplapply(datList,
-                         function(subDat, depth, clustVec, clustTab, pctNZ) {
-                             subSlopes <- rep(1, ncol(subDat))
-                             for(i in seq_len(ncol(subDat))) {
-                                 subSlopes[i] <- poisSlope(subDat[, i], depth,
-                                                           clustVec, clustTab,
-                                                           pctNZ)
-                                }
-                             return(subSlopes)
-                         }, depth = depth, clustVec = clustVec,
-                         clustTab = clustTab, pctNZ = pctNZ, BPPARAM = prll)
+                    function(subDat, depth, clustVec, clustTab, pctNZ) {
+                        subSlopes <- rep(1, ncol(subDat))
+                        for(i in seq_len(ncol(subDat))) {
+                            subSlopes[i] <- poisSlope(subDat[, i], depth,
+                                                clustVec, clustTab,
+                                                pctNZ)
+                        }
+                        return(subSlopes)
+                    }, depth = depth, clustVec = clustVec,
+                    clustTab = clustTab, pctNZ = pctNZ, BPPARAM = prll)
     do.call(c, slopeVec)
 }

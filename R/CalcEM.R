@@ -11,10 +11,9 @@
 #' @importFrom stats runif
 #' @importFrom stats rgamma
 resampCounts <- function(countMat, depth, depthRep, slope,
-                         prec, subInd, doRQS, emPar) {
-    subNorm <- apply(countMat,
-                     2,
-                     function(y, depth, depthRep, slope, prec, subInd) {
+                    prec, subInd, doRQS, emPar) {
+    subNorm <- apply(countMat, 2,
+                function(y, depth, depthRep, slope, prec, subInd) {
     # Calculate eCDF
     outDev <- calcDev(y[subInd], depth[subInd], depthRep, slope)
     cdfList <- list(
@@ -77,7 +76,7 @@ resampCounts <- function(countMat, depth, depthRep, slope,
             } else {break}
         }
         if(any(gamInd > 75) | any(betaInd > 75) |
-           max(gamInd) - min(gamInd) > log(2 * length(subInd))) {
+            max(gamInd) - min(gamInd) > log(2 * length(subInd))) {
             parList$S <- parList$S * 0
         }
 
@@ -136,9 +135,9 @@ resampCounts <- function(countMat, depth, depthRep, slope,
 
         # Estimate mixture CDF
         lBound <- max(10 ^ (-prec),
-                      qgamma(min(lowP), min(lamPar) / phi, scale = phi))
+                        qgamma(min(lowP), min(lamPar) / phi, scale = phi))
         hBound <- max(qgamma(max(highP), max(lamPar) / phi, scale = phi),
-                      lBound + 2e-1)
+                        lBound + 2e-1)
         qSeq <- seq(lBound,
                     hBound,
                     min(1e-1))
@@ -173,16 +172,16 @@ resampCounts <- function(countMat, depth, depthRep, slope,
 
         # Resample counts
         distVec <- apply(parList$pList$spMat[-parList$J, , drop = FALSE], 2,
-                         function(pVec) {
-                             which.min(runif(1) > c(cumsum(pVec), 1))
-                         })
+                        function(pVec) {
+                            which.min(runif(1) > c(cumsum(pVec), 1))
+                        })
 
         shapeVec <- lamPar / phi
         concVec <- emPar$conPar
 
         normVec <- rgamma(n = length(parList$y),
-                          shape = parList$y * concVec + shapeVec[distVec],
-                          scale = 1 / (parList$depth * concVec + 1 / phi))
+                        shape = parList$y * concVec + shapeVec[distVec],
+                        scale = 1 / (parList$depth * concVec + 1 / phi))
         normVec <- round(normVec, prec)
 
         return(normVec)
@@ -199,15 +198,14 @@ resampCounts <- function(countMat, depth, depthRep, slope,
 #' @importFrom BiocParallel bplapply
 #' @importFrom Matrix Matrix
 parResampCounts <- function(countList, depth, depthRep, slope,
-                            prec, subInd, prll, doRQS, emPar) {
+                        prec, subInd, prll, doRQS, emPar) {
     normList <- bplapply(countList,
-                         function(subCounts, depth, depthRep,
-                                  slope, prec, subInd) {
-                             resampCounts(subCounts, depth, depthRep,
-                                          slope, prec, subInd, doRQS, emPar)
-                             }, depth = depth, depthRep = depthRep,
-                         slope = slope, prec = prec, subInd = subInd,
-                         BPPARAM = prll)
+                    function(subCounts, depth, depthRep, slope, prec, subInd) {
+                        resampCounts(subCounts, depth, depthRep,
+                            slope, prec, subInd, doRQS, emPar)
+                    }, depth = depth, depthRep = depthRep,
+                    slope = slope, prec = prec, subInd = subInd,
+                    BPPARAM = prll)
     while(length(normList) > 2) {
         for(i in seq_len(floor(length(normList) / 2))) {
             if(length(normList) >= 2 * i) {
@@ -241,7 +239,7 @@ lLik_func <- function(parList) {
     M <- M + outer(rep(1, length(parList$depth)), parList$gamList$gamVec)
     S <- rowMaxs(M)
     return(sum(log(rowSums(exp(M - S))) + S) -
-               length(parList$y) * log(parList$gamList$gamDot))
+        length(parList$y) * log(parList$gamList$gamDot))
 }
 
 
@@ -255,8 +253,8 @@ lLikFull_func <- function(parList) {
     M <- M + outer(rep(1, length(parList$depth)), parList$gamList$gamVec)
     S <- rowMaxs(M)
     return(sum(log(rowSums(exp(M - S))) + S) -
-               length(parList$y) * log(parList$gamList$gamDot) +
-               sum(parList$y * log(parList$depth) - lfactorial(parList$y)))
+            length(parList$y) * log(parList$gamList$gamDot) +
+            sum(parList$y * log(parList$depth) - lfactorial(parList$y)))
 }
 
 
@@ -268,10 +266,10 @@ lLikUpdate_func <- function(parList) {
     M <- outer(parList$y, parList$parUpdate$betaVec)
     M <- M - outer(parList$depth, exp(parList$parUpdate$betaVec))
     M <- M + outer(rep(1, length(parList$depth)),
-                   parList$parUpdate$gamList$gamVec)
+                    parList$parUpdate$gamList$gamVec)
     S <- rowMaxs(M)
     return(sum(log(rowSums(exp(M - S))) + S) -
-               length(parList$y) * log(parList$parUpdate$gamList$gamDot))
+            length(parList$y) * log(parList$parUpdate$gamList$gamDot))
 }
 
 
@@ -334,9 +332,9 @@ gamUpdate2_func <- function(parList) {
 # parameter
 betaUpdate_func <- function(parList) {
     betaUpdate <- log(pmax(parList$pList$spMat %*% parList$y,
-                           sqrt(.Machine$double.xmin))) -
+                            sqrt(.Machine$double.xmin))) -
         log(pmax(parList$pList$spMat %*% parList$depth,
-                 sqrt(.Machine$double.xmin)))
+                    sqrt(.Machine$double.xmin)))
     return(c(betaUpdate))
 }
 
@@ -345,9 +343,9 @@ betaUpdate_func <- function(parList) {
 # parameter at update pars
 betaUpdate2_func <- function(parList) {
     betaUpdate <- log(pmax(parList$pListUpdate$spMat %*% parList$y,
-                           sqrt(.Machine$double.xmin))) -
+                            sqrt(.Machine$double.xmin))) -
         log(pmax(parList$pListUpdate$spMat %*% parList$depth,
-                 sqrt(.Machine$double.xmin)))
+                    sqrt(.Machine$double.xmin)))
     return(c(betaUpdate))
 }
 
@@ -360,7 +358,7 @@ gTilde_func <- function(parList) {
         gamTilde = gamUpdate - parList$gamList$gamVec,
         betaTilde = betaUpdate - parList$betaVec,
         gTilde = c(gamUpdate - parList$gamList$gamVec,
-                   betaUpdate - parList$betaVec)
+                    betaUpdate - parList$betaVec)
     ))
 }
 
@@ -374,7 +372,7 @@ gTildeUpdate_func <- function(parList) {
         gamTilde = gamUpdate - parList$parUpdate$gamList$gamVec,
         betaTilde = betaUpdate - parList$parUpdate$betaVec,
         gTilde = c(gamUpdate - parList$parUpdate$gamList$gamVec,
-                   betaUpdate - parList$parUpdate$betaVec)
+                    betaUpdate - parList$parUpdate$betaVec)
     ))
 }
 
@@ -393,7 +391,7 @@ gGamma_func <- function(parList) {
 gGamma2_func <- function(parList) {
     M <- rowSums(parList$pListUpdate$spMat) * exp(parList$pListUpdate$lpMax)
     M <- M - sum(M) * exp(parList$parUpdate$gamList$gamVec -
-                              log(parList$parUpdate$gamList$gamDot))
+                            log(parList$parUpdate$gamList$gamDot))
     M[parList$zInd] <- 0
     return(M)
 }
@@ -403,7 +401,7 @@ gGamma2_func <- function(parList) {
 gBeta_func <- function(parList) {
     M <- parList$pList$spMat %*% parList$y -
         rowSums(parList$pList$spMat *
-                    outer(exp(parList$betaVec), parList$depth))
+                outer(exp(parList$betaVec), parList$depth))
     return(c(exp(parList$pList$lpMax) * M))
 }
 
@@ -413,7 +411,7 @@ gBeta_func <- function(parList) {
 gBeta2_func <- function(parList) {
     M <- parList$pListUpdate$spMat %*% parList$y -
         rowSums(parList$pListUpdate$spMat *
-                    outer(exp(parList$parUpdate$betaVec), parList$depth))
+                outer(exp(parList$parUpdate$betaVec), parList$depth))
     return(c(exp(parList$pListUpdate$lpMax) * M))
 }
 
@@ -658,7 +656,7 @@ zoom_func <- function(parList, alphaBounds) {
             if(w2) {
                 return(parList$alpha)
             } else if(t(parList$d) %*% parList$gUpdate$g * diff(alphaBounds) <=
-                      0) {
+                        0) {
                 alphaBounds[2] <- alphaBounds[1]
             }
             alphaBounds[1] <- parList$alpha

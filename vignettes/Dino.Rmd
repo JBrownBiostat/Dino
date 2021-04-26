@@ -5,9 +5,9 @@ package: Dino
 date: 04/23/2021
 output: BiocStyle::html_document
 vignette: >
-  %\VignetteIndexEntry{Normalization by distributional resampling of high throughput single-cell RNA-sequencing data}
-  %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
+    %\VignetteIndexEntry{Normalization by distributional resampling of high throughput single-cell RNA-sequencing data}
+    %\VignetteEngine{knitr::rmarkdown}
+    \usepackage[utf8]{inputenc}
 ---
 
 ```{r Initialize, echo=FALSE, results="hide", message=FALSE}
@@ -59,7 +59,7 @@ Norm_Seurat <- SeuratFromDino(UMI_Mat)
 
 ## Read UMI data
 
-To facilitate concrete examples, we demonstrate normalization on a small subset of sequencing data from about 3,000 peripheral blood mononuclear cells (PBMCs) published by [10X Genomics](https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k). This dataset, named `pbmcSmall` contains 500 cells and 7,082 genes and is included with the **Dino** package.
+To facilitate concrete examples, we demonstrate normalization on a small subset of sequencing data from about 3,000 peripheral blood mononuclear cells (PBMCs) published by [10X Genomics](https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k). This dataset, named `pbmcSmall` contains 400 cells and 5,000 genes and is included with the **Dino** package.
 
 ```{r load pbmcSmall data}
 set.seed(1)
@@ -88,15 +88,15 @@ print(dim(pbmcSmall))
 
 ## Normalize UMI data
 
-**Dino** contains several options to tune output. One of particular interest is `nCores` which allows for parallel computation of normalized expression. By default, **Dino** runs in single-threaded mode. Choosing `nCores = 0` will utilize all available cores, and otherwise an integer number of parallel instances can be chosen.
+**Dino** contains several options to tune output. One of particular interest is `nCores` which allows for parallel computation of normalized expression. By default, **Dino** runs with two threads. Choosing `nCores = 0` will utilize all available cores, and otherwise an integer number of parallel instances can be chosen.
 
 ```{r normalize data, eval = FALSE}
 # Normalize data
-pbmcSmall_Norm <- Dino(pbmcSmall, nCores = 1)
+pbmcSmall_Norm <- Dino(pbmcSmall)
 ```
 
 ```{r normalize data background, echo = FALSE}
-invisible(capture.output(pbmcSmall_Norm <- Dino(pbmcSmall, nCores = 1)))
+invisible(capture.output(pbmcSmall_Norm <- Dino(pbmcSmall)))
 ```
 
 ## Clustering with Seurat
@@ -109,9 +109,9 @@ pbmcSmall_Seurat <- SeuratFromDino(pbmcSmall_Norm, doNorm = FALSE)
 
 # Cluster pbmcSmall_Seurat
 pbmcSmall_Seurat <- FindVariableFeatures(pbmcSmall_Seurat, 
-                                      selection.method = "mvp")
+                        selection.method = "mvp")
 pbmcSmall_Seurat <- ScaleData(pbmcSmall_Seurat, 
-                           features = rownames(pbmcSmall_Norm))
+                        features = rownames(pbmcSmall_Norm))
 pbmcSmall_Seurat <- RunPCA(pbmcSmall_Seurat, 
                         features = VariableFeatures(object = pbmcSmall_Seurat),
                         verbose = FALSE)
@@ -183,13 +183,13 @@ library(ggpubr)
 library(grid)
 
 themeObj <- theme(
-  title = element_text(size = 17),
-  plot.subtitle = element_text(size = 15),
-  axis.title = element_text(size = 14),
-  axis.text = element_text(size = 12),
-  strip.text = element_text(size = 14),
-  legend.title = element_text(size = 14),
-  legend.text = element_text(size = 12)
+    title = element_text(size = 17),
+    plot.subtitle = element_text(size = 15),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    strip.text = element_text(size = 14),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12)
 )
 
 
@@ -197,255 +197,257 @@ themeObj <- theme(
 ## Functions ##
 ###############
 gamDens_func <- function(y, lamVec, tauVec, phi, n = 1e3) {
-  x <- seq(
-    quantile(y, 1 / (2 * n)),
-    quantile(y, 1 - 1 / (2 * n)),
-    length = n
-  )
-  if(x[1] == 0) {x <- x[-1]}
-  yMat <- mapply(function(lamPar, tauPar, x, phi) {
-    dgamma(x, lamPar / phi, scale = phi) * tauPar
-  }, lamVec, tauVec, MoreArgs = list(x = x, phi = phi))
-  y <- rowSums(yMat)
-  return(data.frame(
-    x = x,
-    y = y
-  ))
+    x <- seq(
+        quantile(y, 1 / (2 * n)),
+        quantile(y, 1 - 1 / (2 * n)),
+        length = n
+    )
+    if(x[1] == 0) {x <- x[-1]}
+    yMat <- mapply(function(lamPar, tauPar, x, phi) {
+        dgamma(x, lamPar / phi, scale = phi) * tauPar
+    }, lamVec, tauVec, MoreArgs = list(x = x, phi = phi))
+    y <- rowSums(yMat)
+    return(data.frame(
+        x = x,
+        y = y
+        ))
 }
 
 dinoFit_func <- function(y, LS) {
-  if(length(y) > 1e4) {
-    subInd <- sample.int(length(y), 1e4)
-  } else {
-    subInd <- 1:length(y)
-  }
-  depth <- LS
-  slope <- 1
-  depthRep <- Dino:::calcDepthRep(depth[subInd])
-  prec <- 3
-  emPar <- list(maxIter = 100, tol = 1, conPar = 25, maxK = 100)
-  
-  outDev <- Dino:::calcDev(y[subInd], depth[subInd], depthRep, slope)
-  cdfList <- list(
-    eCDF_fun = approxfun(
-      x = outDev$quant,
-      y = outDev$pct,
-      yleft = 0, yright = 1
-    ),
-    eQuant_fun = approxfun(
-      x = outDev$pct,
-      y = outDev$quant,
-      yleft = -Inf, yright = max(outDev$quant)
+    if(length(y) > 1e4) {
+        subInd <- sample.int(length(y), 1e4)
+    } else {
+        subInd <- 1:length(y)
+    }
+    depth <- LS
+    slope <- 1
+    depthRep <- Dino:::calcDepthRep(depth[subInd])
+    prec <- 3
+    emPar <- list(maxIter = 100, tol = 1, conPar = 25, maxK = 100)
+
+    outDev <- Dino:::calcDev(y[subInd], depth[subInd], depthRep, slope)
+    cdfList <- list(
+        eCDF_fun = approxfun(
+            x = outDev$quant,
+            y = outDev$pct,
+            yleft = 0, yright = 1
+        ),
+        eQuant_fun = approxfun(
+            x = outDev$pct,
+            y = outDev$quant,
+            yleft = -Inf, yright = max(outDev$quant)
+        )
     )
-  )
-  
-  # Run EM
-  minD <- min(depth)
-  if(minD < 0) {
-    fitSlope <- min(slope, (exp(minD - 3) - 1) / (exp(minD) - 1))
-  } else {
-    fitSlope <- max(slope, (exp(minD - 3) - 1) / (exp(minD) - 1))
-  }
-  parList <- Dino:::initEM_func(
-    y = y[subInd],
-    slope = fitSlope,
-    subCDF = cdfList,
-    depth = depth[subInd],
-    stepInit = 5, 
-    emPar
-  )
-  
-  nUpdate <- emPar$maxIter
-  deltaStop <- emPar$tol
-  iter <- 0
-  
-  while(iter < nUpdate) {
-    iter <- iter + 1
-    
-    parList$d <- -parList$gTilde$gTilde +
-      parList$S %*% parList$g$g
-    parList$alpha <- -1
-    
-    gamInd <- parList$gamList$gamVec + parList$alpha * parList$d[1:parList$J]
-    if(!all(gamInd >= -75)) {
-      if(parList$J > 2) {
-        parList <- Dino:::parListUpdate_func(parList)
-        parList$lLik <- Dino:::lLik_func(parList)
-        parList$S <- parList$S * 0
-      } else {break}
+
+    # Run EM
+    minD <- min(depth)
+    if(minD < 0) {
+        fitSlope <- min(slope, (exp(minD - 3) - 1) / (exp(minD) - 1))
+    } else {
+        fitSlope <- max(slope, (exp(minD - 3) - 1) / (exp(minD) - 1))
     }
+    parList <- Dino:::initEM_func(
+        y = y[subInd],
+        slope = fitSlope,
+        subCDF = cdfList,
+        depth = depth[subInd],
+        stepInit = 5, 
+        emPar
+    )
+
+    nUpdate <- emPar$maxIter
+    deltaStop <- emPar$tol
+    iter <- 0
+
+    while(iter < nUpdate) {
+        iter <- iter + 1
     
-    betaInd <- parList$betaVec +
-      parList$alpha * parList$d[(parList$J + 1):(2 * parList$J)]
-    if(!all(betaInd > -75)) {
-      if(parList$J > 2) {
-        parList <- Dino:::parListUpdate_func(parList, doBeta = TRUE)
-        parList$lLik <- Dino:::lLik_func(parList)
-        parList$S <- parList$S * 0
-      } else {break}
+        parList$d <- -parList$gTilde$gTilde +
+            parList$S %*% parList$g$g
+        parList$alpha <- -1
+    
+        gamInd <- parList$gamList$gamVec + 
+            parList$alpha * parList$d[1:parList$J]
+        if(!all(gamInd >= -75)) {
+            if(parList$J > 2) {
+                parList <- Dino:::parListUpdate_func(parList)
+                parList$lLik <- Dino:::lLik_func(parList)
+                parList$S <- parList$S * 0
+            } else {break}
+        }
+    
+        betaInd <- parList$betaVec +
+            parList$alpha * parList$d[(parList$J + 1):(2 * parList$J)]
+        if(!all(betaInd > -75)) {
+            if(parList$J > 2) {
+                parList <- Dino:::parListUpdate_func(parList, doBeta = TRUE)
+                parList$lLik <- Dino:::lLik_func(parList)
+                parList$S <- parList$S * 0
+            } else {break}
+        }
+        if(any(gamInd > 75) | any(betaInd > 75) | max(gamInd) - min(gamInd) > 
+            log(2 * length(subInd))) {
+                parList$S <- parList$S * 0
+        }
+    
+        parList <- Dino:::calcStep_func(parList)
+    
+        dTheta <- parList$parUpdate$parVec -
+            c(parList$gamList$gamVec, parList$betaVec)
+        dg <- parList$gUpdate$g - parList$g$g
+        parList$dgTilde <- Dino:::gTildeUpdate_func(parList)
+        dgTilde <- parList$dgTilde$gTilde - parList$gTilde$gTilde
+    
+        dThetaStar <- -dgTilde + parList$S %*% dg
+        parList$S <- parList$S +
+            c(1 + (t(dg) %*% dThetaStar) / (t(dg) %*% dTheta)) *
+            (dTheta %*% t(dTheta)) / c(t(dg) %*% dTheta) -
+            (dThetaStar %*% t(dTheta) + t(dThetaStar %*% t(dTheta))) /
+            c(t(dg) %*% dTheta)
+    
+        parList$pList <- parList$pListUpdate
+        parList$gamList <- parList$parUpdate$gamList
+        parList$betaVec <- parList$parUpdate$betaVec
+        parList$g <- parList$gUpdate
+        parList$gTilde <- parList$dgTilde
+        if(parList$lLikUpdate - parList$lLik <= deltaStop) {
+            break
+        }
+        parList$lLik <- parList$lLikUpdate
     }
-    if(any(gamInd > 75) | any(betaInd > 75) | max(gamInd) - min(gamInd) > 
-       log(2 * length(subInd))) {
-      parList$S <- parList$S * 0
-    }
-    
-    parList <- Dino:::calcStep_func(parList)
-    
-    dTheta <- parList$parUpdate$parVec -
-      c(parList$gamList$gamVec, parList$betaVec)
-    dg <- parList$gUpdate$g - parList$g$g
-    parList$dgTilde <- Dino:::gTildeUpdate_func(parList)
-    dgTilde <- parList$dgTilde$gTilde - parList$gTilde$gTilde
-    
-    dThetaStar <- -dgTilde + parList$S %*% dg
-    parList$S <- parList$S +
-      c(1 + (t(dg) %*% dThetaStar) / (t(dg) %*% dTheta)) *
-      (dTheta %*% t(dTheta)) / c(t(dg) %*% dTheta) -
-      (dThetaStar %*% t(dTheta) + t(dThetaStar %*% t(dTheta))) /
-      c(t(dg) %*% dTheta)
-    
-    parList$pList <- parList$pListUpdate
-    parList$gamList <- parList$parUpdate$gamList
-    parList$betaVec <- parList$parUpdate$betaVec
-    parList$g <- parList$gUpdate
-    parList$gTilde <- parList$dgTilde
-    if(parList$lLikUpdate - parList$lLik <= deltaStop) {
-      break
-    }
-    parList$lLik <- parList$lLikUpdate
-  }
-  
-  parList$pList$spMat <- parList$pList$spMat * exp(parList$pList$lpMax)
-  lamPar <- pmax(exp(parList$betaVec), .Machine$double.xmin * 1e1)
-  bw <- tryCatch({
-    suppressWarnings(bw.ucv(lamPar))
-  }, error = function(e) {
-    tryCatch({
-      bw.nrd(lamPar)
+
+    parList$pList$spMat <- parList$pList$spMat * exp(parList$pList$lpMax)
+    lamPar <- pmax(exp(parList$betaVec), .Machine$double.xmin * 1e1)
+    bw <- tryCatch({
+        suppressWarnings(bw.ucv(lamPar))
     }, error = function(e) {
-      1 / sqrt(parList$J)
+        tryCatch({
+            bw.nrd(lamPar)
+        }, error = function(e) {
+            1 / sqrt(parList$J)
+        })
     })
-  })
-  phi <- bw
-  
-  # Update model for all points
-  parList$y <- y
-  parList$depth <- exp(depth) * fitSlope - fitSlope + 1
-  parList$pList <- Dino:::lpMat_func(parList)
-  
-  tauPar <- parList$gamList$gamVec - max(parList$gamList$gamVec)
-  tauPar <- exp(tauPar)
-  tauPar <- tauPar / sum(tauPar)
-  tauPar <- pmax(tauPar, .Machine$double.xmin * 1e1)
-  tauPar <- tauPar / sum(tauPar)
-  lamPar <- pmax(exp(parList$betaVec), .Machine$double.xmin * 1e1)
-  parList$pList$spMat <- parList$pList$spMat * exp(parList$pList$lpMax)
-  
-  shapeVec <- lamPar / bw
-  concVec <- emPar$conPar
-  
-  return(list(
-    pMat = parList$pList$spMat,
-    lamPar = lamPar,
-    phi = phi,
-    tauPar = tauPar,
-    concVec = concVec
-  ))
+    phi <- bw
+
+    # Update model for all points
+    parList$y <- y
+    parList$depth <- exp(depth) * fitSlope - fitSlope + 1
+    parList$pList <- Dino:::lpMat_func(parList)
+
+    tauPar <- parList$gamList$gamVec - max(parList$gamList$gamVec)
+    tauPar <- exp(tauPar)
+    tauPar <- tauPar / sum(tauPar)
+    tauPar <- pmax(tauPar, .Machine$double.xmin * 1e1)
+    tauPar <- tauPar / sum(tauPar)
+    lamPar <- pmax(exp(parList$betaVec), .Machine$double.xmin * 1e1)
+    parList$pList$spMat <- parList$pList$spMat * exp(parList$pList$lpMax)
+
+    shapeVec <- lamPar / bw
+    concVec <- emPar$conPar
+
+    return(list(
+        pMat = parList$pList$spMat,
+        lamPar = lamPar,
+        phi = phi,
+        tauPar = tauPar,
+        concVec = concVec
+    ))
 }
 
 plotSim_func <- function(muVec, dVec, k) {
-  n <- k ^ 2
-  LS <- c()
-  sampY <- c()
-  for(i in 1:length(muVec)) {
-    newLS <- rnorm(n / length(muVec), sd = 0.5)
-    sampY <- c(
-      sampY, 
-      sapply(exp(newLS), function(lsPar) {
-        rnbinom(1, mu = muVec[i] * lsPar, size = lsPar / dVec[i])
-      })
-    )
-    LS <- c(LS, newLS)
-  }
-  while(sum(sampY > 0) < n + 1) {
+    n <- k ^ 2
+    LS <- c()
+    sampY <- c()
     for(i in 1:length(muVec)) {
-      newLS <- rnorm(1, sd = 0.5)
-      sampY <- c(
-        sampY, 
-        sapply(exp(newLS), function(lsPar) {
-          rnbinom(1, mu = muVec[i] * lsPar, size = lsPar / dVec[i])
-        })
-      )
-      LS <- c(LS, newLS)
+        newLS <- rnorm(n / length(muVec), sd = 0.5)
+        sampY <- c(
+            sampY, 
+            sapply(exp(newLS), function(lsPar) {
+                rnbinom(1, mu = muVec[i] * lsPar, size = lsPar / dVec[i])
+            })
+        )
+        LS <- c(LS, newLS)
     }
-  }
-  LS <- LS[1:which(cumsum(sampY > 0) == n + 1)]
-  sampY <- sampY[1:which(cumsum(sampY > 0) == n + 1)]
-  
-  dinoOut <- dinoFit_func(sampY, LS)
-  
-  dinoDens <- gamDens_func(sampY, dinoOut$lamPar, dinoOut$tauPar, dinoOut$phi)
-  
-  x.dens <- seq(
-    1e-3,
-    quantile(sampY, 1 - 1 / (2 * n)) * 2,
-    length = 1e3
-  )
-  if(x.dens[1] == 0) {x.dens <- x.dens[-1]}
-  y.dens <- rowMeans(mapply(function(lamPar, dPar) {
-    dnbinom(floor(x.dens + 0.5), mu = lamPar, size = 1 / dPar)
-  }, muVec, dVec))
-  
-  plotDat <- data.frame(
-    x = c(x.dens, dinoDens$x),
-    y = c(y.dens, dinoDens$y),
-    model = rep(c("NB", "Dino"), c(length(x.dens), length(dinoDens$x)))
-  )
-  p2 <- ggplot(plotDat, aes(x = x, y = y, color = model)) + 
-    theme_classic() + 
-    geom_line() + 
-    scale_color_manual(values = 1:2) + 
-    labs(x = "Expression", y = "Density", color = "Model", 
-         title = "Reference vs.\nFitted distribution") + 
-    themeObj
-  xInd <- which.max(y.dens < 1e-3 * max(y.dens) & 
-                      x.dens > x.dens[which.max(y.dens)])
-  if(xInd > 1) {
-    p2 <- p2 + 
-      xlim(c(0, x.dens[which.max(y.dens < 1e-3 * max(y.dens) & 
-                                   x.dens > x.dens[which.max(y.dens)])]))
-  }
-  if(max(y.dens) < max(dinoDens$y)) {
-    p2 <- p2 + 
-      ylim(c(0, min(c(1.025 * max(dinoDens$y), 1.5 * max(y.dens)))))
-  }
-  p2
-  
-  plotDat <- data.frame(
-    y = log1p(sampY),
-    LS = LS
-  )
-  p1 <- ggplot(plotDat, aes(x = LS, y = y)) + 
-    theme_classic() + 
-    geom_hex(aes(fill = log10(..count..))) + 
-    scale_fill_viridis_c() + 
-    labs(x = "log-Depth", y = "Expression (log)", 
-         title = "Fitted means", fill = "Count\n(log10)")
-  for(i in 1:length(dinoOut$lamPar)) {
+    while(sum(sampY > 0) < n + 1) {
+        for(i in 1:length(muVec)) {
+            newLS <- rnorm(1, sd = 0.5)
+            sampY <- c(
+                sampY, 
+                sapply(exp(newLS), function(lsPar) {
+                    rnbinom(1, mu = muVec[i] * lsPar, size = lsPar / dVec[i])
+                })
+            )
+            LS <- c(LS, newLS)
+        }
+    }
+    LS <- LS[1:which(cumsum(sampY > 0) == n + 1)]
+    sampY <- sampY[1:which(cumsum(sampY > 0) == n + 1)]
+
+    dinoOut <- dinoFit_func(sampY, LS)
+
+    dinoDens <- gamDens_func(sampY, dinoOut$lamPar, dinoOut$tauPar, dinoOut$phi)
+
+    x.dens <- seq(
+        1e-3,
+        quantile(sampY, 1 - 1 / (2 * n)) * 2,
+        length = 1e3
+    )
+    if(x.dens[1] == 0) {x.dens <- x.dens[-1]}
+    y.dens <- rowMeans(mapply(function(lamPar, dPar) {
+        dnbinom(floor(x.dens + 0.5), mu = lamPar, size = 1 / dPar)
+    }, muVec, dVec))
+
+    plotDat <- data.frame(
+        x = c(x.dens, dinoDens$x),
+        y = c(y.dens, dinoDens$y),
+        model = rep(c("NB", "Dino"), c(length(x.dens), length(dinoDens$x)))
+    )
+    p2 <- ggplot(plotDat, aes(x = x, y = y, color = model)) + 
+        theme_classic() + 
+        geom_line() + 
+        scale_color_manual(values = 1:2) + 
+        labs(x = "Expression", y = "Density", color = "Model", 
+            title = "Reference vs.\nFitted distribution") + 
+        themeObj
+    xInd <- which.max(y.dens < 1e-3 * max(y.dens) & 
+                x.dens > x.dens[which.max(y.dens)])
+    if(xInd > 1) {
+        p2 <- p2 + 
+            xlim(c(0, x.dens[which.max(y.dens < 1e-3 * max(y.dens) & 
+                                x.dens > x.dens[which.max(y.dens)])]))
+    }
+    if(max(y.dens) < max(dinoDens$y)) {
+        p2 <- p2 + 
+            ylim(c(0, min(c(1.025 * max(dinoDens$y), 1.5 * max(y.dens)))))
+    }
+    p2
+
+    plotDat <- data.frame(
+        y = log1p(sampY),
+        LS = LS
+    )
+    p1 <- ggplot(plotDat, aes(x = LS, y = y)) + 
+        theme_classic() + 
+        geom_hex(aes(fill = log10(..count..))) + 
+        scale_fill_viridis_c() + 
+        labs(x = "log-Depth", y = "Expression (log)", 
+                title = "Fitted means", fill = "Count\n(log10)")
+    for(i in 1:length(dinoOut$lamPar)) {
+        p1 <- p1 + 
+            geom_abline(slope = 1, intercept = log1p(dinoOut$lamPar[i]), 
+                col = 1, alpha = 0.5, lwd = 0.75)
+    }
+    for(i in 1:length(muVec)) {
+        p1 <- p1 + 
+            geom_abline(slope = 1, intercept = log1p(muVec[i]), 
+                col = 2, lwd = 1.5)
+    }
     p1 <- p1 + 
-      geom_abline(slope = 1, intercept = log1p(dinoOut$lamPar[i]), 
-                  col = 1, alpha = 0.5, lwd = 0.75)
-  }
-  for(i in 1:length(muVec)) {
-    p1 <- p1 + 
-      geom_abline(slope = 1, intercept = log1p(muVec[i]), col = 2, lwd = 1.5)
-  }
-  p1 <- p1 + 
-    themeObj
-  
-  p <- grid.arrange(p1, p2, nrow = 1, 
-                    top = textGrob(paste0("K = ", k), gp = gpar(fontsize = 17)))
-  return(p)
+        themeObj
+
+    p <- grid.arrange(p1, p2, nrow = 1, 
+            top = textGrob(paste0("K = ", k), gp = gpar(fontsize = 17)))
+    return(p)
 }
 
 #############

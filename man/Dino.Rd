@@ -4,7 +4,7 @@
 \alias{Dino}
 \title{Normalize scRNAseq data}
 \usage{
-Dino(counts, nCores = 1, prec = 3, minNZ = 10,
+Dino(counts, nCores = 2, prec = 3, minNZ = 10,
     nSubGene = 1e4, nSubCell = 1e4, depth = NULL, slope = NULL,
     minSlope = 1/2, maxSlope = 2, clusterSlope = TRUE,
     returnMeta = FALSE, doRQS = FALSE,

@@ -3,7 +3,7 @@
 #
 #' @importFrom Matrix Matrix
 check_DinoIn <- function(counts, nCores, prec, minNZ,
-                         nSubGene, nSubCell, depth, slope, returnMeta) {
+                    nSubGene, nSubCell, depth, slope, returnMeta) {
     ## Checks
     counts <- checkCounts(counts)
     minNZ <- checkMinNZ(minNZ, counts)
@@ -184,8 +184,8 @@ checkNCores <- function(nCores) {
         nCores <- detectCores()
     }
     if(nCores > detectCores()) {
-        warning(paste0("'nCores' is greater than the number of available ",
-                       "cores, reducing to ", detectCores()))
+        warning(cat("'nCores' is greater than the number of available ",
+                    "cores, reducing to ", detectCores()))
         nCores <- detectCores()
     }
     return(nCores)

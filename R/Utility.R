@@ -28,7 +28,7 @@ setPar <- function(nCores, taskList = NULL) {
         register(BPPARAM = prll, default = TRUE)
     } else {
         prll <- MulticoreParam(workers = nCores, tasks = nTask,
-                               progressbar = TRUE)
+                    progressbar = TRUE)
         register(BPPARAM = prll, default = TRUE)
     }
     return(prll)

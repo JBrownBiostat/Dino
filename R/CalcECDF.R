@@ -22,9 +22,9 @@ calcDev <- function(y, depth, depthRep, slope = 1) {
 
     # Calculate lower deviations
     ret$lowDev <- sum((log(0.999) + slope * (depth - ret$intercept[1])) -
-                          logY) -
-        cumsum(c(0, diff(ret$intercept) * slope *
-                     rev(cumsum(rev(ret$freq[-1])))))
+                    logY) -
+                cumsum(c(0, diff(ret$intercept) * slope *
+                    rev(cumsum(rev(ret$freq[-1])))))
 
     # Calculate upper deviations
     intDepthOrd <- order(c(ret$intercept, depthRep$depth))
@@ -32,8 +32,8 @@ calcDev <- function(y, depth, depthRep, slope = 1) {
         0,
             cumsum(
                 (cumsum(c(ret$freq, -depthRep$rep)[intDepthOrd])
-                 [-(nrow(ret) + nrow(depthRep))] *
-                     diff(c(ret$intercept, depthRep$depth)[intDepthOrd])) *
+                    [-(nrow(ret) + nrow(depthRep))] *
+                    diff(c(ret$intercept, depthRep$depth)[intDepthOrd])) *
                     slope)[intDepthOrd <= nrow(ret)][-nrow(ret)]
     )
 
@@ -52,7 +52,7 @@ calcDev <- function(y, depth, depthRep, slope = 1) {
     nY <- sum(ret$freq)
     chullInt <- chull(ret$highDev, ret$lowDev)
     chullInt <- chullInt[which.max(chullInt == nrow(ret)):
-                             which.max(chullInt == 1)]
+                    which.max(chullInt == 1)]
     hRet <- ret[rev(chullInt), ]
     hRet$m <- c(1e3 * diff(hRet$lowDev[seq_len(2)]) /
                     diff(hRet$highDev[seq_len(2)]),
@@ -65,7 +65,7 @@ calcDev <- function(y, depth, depthRep, slope = 1) {
     for(i in 2:length(pctDiff)) {
         lZ <- lZ + ret$zInt[i] -
             (pctDiff[i-1] - (ret$freq[i - 1] - ret$zInt[i - 1]) / nY) * nY
-        pctDiff[i] <- min(pctDiff[i], (ret$freq[i] - ret$zInt[i] + lZ) / nY)
+            pctDiff[i] <- min(pctDiff[i], (ret$freq[i] - ret$zInt[i] + lZ) / nY)
     }
     ret$pct <- c(1, 1 - cumsum(pctDiff))
     ret$quant <- -ret$intercept * slope + log(0.999)
@@ -98,7 +98,7 @@ calcDev <- function(y, depth, depthRep, slope = 1) {
         data.frame(
             pct = seq(minP, 0, length = ceiling(100 * minP)),
             quant = log(qgamma(seq(minP, 0, length = ceiling(100 * minP)),
-                               mu / beta, beta)) -
+                        mu / beta, beta)) -
                 (min(ret$quant) - log(qgamma(minP, mu / beta, beta)))
         )
     )

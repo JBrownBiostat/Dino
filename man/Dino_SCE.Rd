@@ -34,7 +34,7 @@ str(pbmcSmall)
 library(SingleCellExperiment)
 pbmc_SCE <- SingleCellExperiment(assays = list("counts" = pbmcSmall))
 
-# run Dino on raw expression matrix, output Seurat object
+# Run Dino
 pbmc_SCE <- Dino_SCE(pbmc_SCE)
 str(pbmc_SCE)
 str(normcounts(pbmc_SCE))
