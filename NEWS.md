@@ -16,3 +16,9 @@
 * Updated formatting for Bioconductor submission.
 * Reduced size of sample dataset
 * Updated default number of cores to 2
+
+## Dino 0.99.2
+
+---------------------
+
+* Force bioconductor rebuild
