@@ -22,3 +22,10 @@
 ---------------------
 
 * Force bioconductor rebuild
+
+
+## Dino 0.99.3
+
+---------------------
+
+* Reduce size of tutorial data
