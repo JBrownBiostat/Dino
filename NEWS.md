@@ -1,5 +1,6 @@
 # Updates
 
+
 ## Dino 0.99.0
 
 ---------------------
@@ -29,3 +30,11 @@
 ---------------------
 
 * Reduce size of tutorial data
+
+
+## Dino 0.99.4
+
+---------------------
+
+* Revised formatting for Bioconductor submission.
+* Bug fix

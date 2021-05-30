@@ -110,76 +110,25 @@ Dino <- function(counts, nCores = 2, prec = 3, minNZ = 10,
     depth <- checkOut$depth
     slope <- checkOut$slope
     returnMeta <- checkOut$returnMeta
-    rm(checkOut)
 
 
     ## Set depth
-    if(is.null(depth)) {
-        message("Computing sequencing depth")
-        depth <- log(rowSums(counts))
-        depth <- depth - median(depth)
-        depth <- round(depth, prec)
-    }
+    depth <- estDepth_func(depth, counts, prec)
     depthRep <- calcDepthRep(depth)
 
 
     ## Calculate slope
-    if(is.null(slope)) {
-        message("Calculating regression slope")
-        slope <- calcSlope(counts, depth, nSubGene, nSubCell, clusterSlope,
-                    nCores, ...)
-        if(slope < minSlope) {
-            warning(cat("Fitted slope (",
-                round(slope, 3),
-                ") below minSlope (",
-                round(minSlope, 3),
-                ") -- setting slope = 1"))
-            slope = 1
-        }
-        if(slope > maxSlope) {
-            warning(cat("Fitted slope (",
-                round(slope, 3),
-                ") above maxSlope (",
-                round(maxSlope, 3),
-                ") -- setting slope = 1"))
-            slope = 1
-        }
-    }
+    slope <- estSlope_func(
+        slope, counts, depth, nSubGene, nSubCell, clusterSlope, nCores, minSlope,
+        maxSlope, ...
+    )
 
 
     ## Resample counts
-    if(nrow(counts) > nSubCell) {
-        subInd <- sample.int(nrow(counts), nSubCell)
-        depthRep <- calcDepthRep(depth[subInd])
-    } else {
-        subInd <- seq_len(nrow(counts))
-    }
-    dinoGenes <- which(colSums(counts[subInd, ] > 0) >= minNZ)
-    libGenes <- which(!(seq_len(ncol(counts[subInd, ])) %in% dinoGenes))
-    if(length(libGenes) > 0){
-        warning(cat("Some genes have expression non-zero expression below ",
-            "'minNZ' when subsampled\nand will be normalized via
-            scale-factor"))
-        libCounts <- counts[, libGenes, drop = FALSE]
-        countList <- splitGenes(counts[, dinoGenes, drop = FALSE])
-    } else {
-        countList <- splitGenes(counts[, dinoGenes, drop = FALSE])
-    }
-    prll <- setPar(nCores, countList)
-
-    message("Normalizing counts by resampling")
-    if(length(libGenes) > 0) {
-        normCounts_lib <- libCounts / exp(depth)
-        colnames(normCounts_lib) <- colnames(counts)[libGenes]
-        normCounts_Dino <- parResampCounts(countList, depth, depthRep, slope,
-            prec, subInd, prll, doRQS, emPar)
-        colnames(normCounts_Dino) <- colnames(counts)[dinoGenes]
-        normCounts <- cbind(normCounts_Dino, normCounts_lib)
-        normCounts <- normCounts[, colnames(counts)]
-    } else {
-        normCounts <- parResampCounts(countList, depth, depthRep, slope,
-            prec, subInd, prll, doRQS, emPar)
-    }
+    normCounts <- dinoResamp_func(
+        counts, nSubCell, depth, minNZ, slope, prec, doRQS, emPar, nCores,
+        depthRep
+    )
 
     colnames(normCounts) <- colnames(counts)
     rownames(normCounts) <- rownames(counts)
@@ -195,6 +144,92 @@ Dino <- function(counts, nCores = 2, prec = 3, minNZ = 10,
             slope = slope
         ))
     }
+}
+
+
+# dinoResamp_func is a helper function to resample expression
+dinoResamp_func <- function(
+    counts, nSubCell, depth, minNZ, slope, prec, doRQS, emPar, nCores,
+    depthRep
+) {
+    if(nrow(counts) > nSubCell) {
+        subInd <- sample.int(nrow(counts), nSubCell)
+        depthRep <- calcDepthRep(depth[subInd])
+    } else {
+        subInd <- seq_len(nrow(counts))
+    }
+    dinoGenes <- which(colSums(counts[subInd, ] > 0) >= minNZ)
+    libGenes <- which(!(seq_len(ncol(counts[subInd, ])) %in% dinoGenes))
+    if(length(libGenes) > 0){
+        warning(cat("Some genes have expression non-zero expression below ",
+                    "'minNZ' when subsampled\nand will be normalized via
+            scale-factor"))
+        libCounts <- counts[, libGenes, drop = FALSE]
+        countList <- splitGenes(counts[, dinoGenes, drop = FALSE])
+    } else {
+        countList <- splitGenes(counts[, dinoGenes, drop = FALSE])
+    }
+    prll <- setPar(nCores, countList)
+
+    message("Normalizing counts by resampling")
+    if(length(libGenes) > 0) {
+        normCounts_lib <- libCounts / exp(depth)
+        colnames(normCounts_lib) <- colnames(counts)[libGenes]
+        normCounts_Dino <- parResampCounts(countList, depth, depthRep, slope,
+                                           prec, subInd, prll, doRQS, emPar)
+        colnames(normCounts_Dino) <- colnames(counts)[dinoGenes]
+        normCounts <- cbind(normCounts_Dino, normCounts_lib)
+        normCounts <- normCounts[, colnames(counts)]
+    } else {
+        normCounts <- parResampCounts(countList, depth, depthRep, slope,
+                                      prec, subInd, prll, doRQS, emPar)
+    }
+
+    return(normCounts)
+}
+
+
+# estSlope_func is a helper function to estimate regression slope
+estSlope_func <- function(
+    slope, counts, depth, nSubGene, nSubCell, clusterSlope, nCores, minSlope,
+    maxSlope, ...
+) {
+    if(is.null(slope)) {
+        message("Calculating regression slope")
+        slope <- calcSlope(counts, depth, nSubGene, nSubCell, clusterSlope,
+                           nCores, ...)
+        if(slope < minSlope) {
+            warning(cat("Fitted slope (",
+                        round(slope, 3),
+                        ") below minSlope (",
+                        round(minSlope, 3),
+                        ") -- setting slope = 1"))
+            slope = 1
+        }
+        if(slope > maxSlope) {
+            warning(cat("Fitted slope (",
+                        round(slope, 3),
+                        ") above maxSlope (",
+                        round(maxSlope, 3),
+                        ") -- setting slope = 1"))
+            slope = 1
+        }
+    }
+
+    return(slope)
+}
+
+
+# estDepth_func is a helper function to estimate sequencing depth
+estDepth_func <- function(depth, counts, prec) {
+    if(is.null(depth)) {
+        message("Computing sequencing depth")
+        depth <- log(rowSums(counts))
+        depth <- depth - median(depth)
+        depth <- round(depth, prec)
+    }
+
+    return(depth)
 }
 
 
@@ -291,22 +326,6 @@ SeuratFromDino <- function(counts, doNorm = TRUE, doLog = TRUE, ...) {
         normAssay <- CreateSeuratObject(normAssay)
     }
     return(normAssay)
-
-
-    # if(doNorm) {
-    #     DinoOut <- Dino(counts, ...)
-    #     if(is.list(DinoOut)) {
-    #         counts <- DinoOut$normMat
-    #     } else {
-    #         counts <- DinoOut
-    #     }
-    # }
-    # if(doLog) {
-    #     normAssay <- CreateAssayObject(data = log1p(counts))
-    # } else {
-    #     normAssay <- CreateAssayObject(data = counts)
-    # }
-    # return(CreateSeuratObject(normAssay))
 }
 
 
