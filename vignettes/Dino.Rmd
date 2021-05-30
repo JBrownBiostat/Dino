@@ -182,13 +182,15 @@ library(gridExtra)
 library(ggpubr)
 library(grid)
 
-plot(Dino:::p100_unimodal)
+data("postSimPlots")
+
+plot(p100_unimodal)
 ```
 
 Simulating data from a pair of Negative Binomial distributions with different means and different dispersion parameters yields similar results in the multimodal case.
 
 ```{r Multimodal Simulation, echo = FALSE}
-plot(Dino:::p100_multimodal)
+plot(p100_multimodal)
 ```
 
 
@@ -211,6 +213,9 @@ Satija, R., Farrell, J.A., Gennert, D., Schier, A.F. and Regev, A. (2015). "Spat
 
 Amezquita, R.A., Lun, A.T.L., Becht, E., Carey, V.J., Carpp, L.N., Geistlinger, L., Marini, F., Rue-Albrecht, K., Risso, D., Soneson, C., et al. (2020). "Orchestrating single-cell analysis with Bioconductor." Nat. Methods, 17, 137–145.
 [https://doi.org/10.1038/s41592-019-0654-x](https://doi.org/10.1038/s41592-019-0654-x)
+
+Lun, A. T. L., Bach, K. and Marioni, J. C. (2016). "Pooling across cells to normalize single-cell RNA sequencing data with many zero counts." Genome Biol., 17, 1–14.
+[https://doi.org/10.1186/s13059-016-0947-7](https://doi.org/10.1186/s13059-016-0947-7)
 
 # Contact
 

@@ -1,7 +1,7 @@
 Package: Dino
 Type: Package
 Title: Normalization of Single-Cell mRNA Sequencing Data
-Version: 0.99.4
+Version: 0.99.5
 Authors@R: c(
     person("Jared", "Brown", email = "brownj@biostat.wisc.edu",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0002-9151-4386")),
