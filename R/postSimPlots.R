@@ -1,40 +1,38 @@
 #' Plot data from simulated expression
 #'
-#' This plot is used in the vignette to demonstrate the flexibility of the
+#' This data is used in the vignette to demonstrate the flexibility of the
 #' Dino model to smoothly estimate arbitrary latent uninmodal expression
-#' distributions
+#' distributions. These data are intended for internal use only.
 #'
 #' @docType data
 #'
-#' @usage data("p100_unimodal")
+#' @usage data("unimodalDat")
 #'
 #' @format Object of class \code{"gtable"}.
 #'
 #' @keywords datasets
 #'
 #' @examples
-#' data("p100_unimodal")
-#' plot(p100_unimodal)
+#' data("unimodalDat")
 #'
-"p100_unimodal"
+"unimodalDat"
 
 
 #' Plot data from simulated expression
 #'
-#' This plot is used in the vignette to demonstrate the flexibility of the
+#' This data is used in the vignette to demonstrate the flexibility of the
 #' Dino model to smoothly estimate arbitrary latent multimodal expression
-#' distributions
+#' distributions. These data are intended for internal use only.
 #'
 #' @docType data
 #'
-#' @usage data("p100_multimodal")
+#' @usage data("multimodalDat")
 #'
 #' @format Object of class \code{"gtable"}.
 #'
 #' @keywords datasets
 #'
 #' @examples
-#' data("p100_multimodal")
-#' plot(p100_multimodal)
+#' data("multimodalDat")
 #'
-"p100_multimodal"
+"multimodalDat"
