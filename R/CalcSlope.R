@@ -24,6 +24,7 @@ calcSlope <- function(counts, depth, nSubGene, nSubCell, clusterSlope,
         clustVec <- rep(1, nSubCell)
     }
 
+    # Subset genes with a minimum proportion of non-zeros
     subGenes <- colSums(subCounts > 0) / nrow(subCounts) >= 1e-2
     geneMu <- log(apply(subCounts, 2, function(x) {
         exp(mean(log(x + 1))) - 1
@@ -33,6 +34,8 @@ calcSlope <- function(counts, depth, nSubGene, nSubCell, clusterSlope,
     geneSamp <- sample(which(subGenes),
                     min(sum(subGenes), nSubGene),
                     prob = 1 / muFunc(geneMu[subGenes]))
+
+    # Fit to batches of genes
     datList <- splitGenes(subCounts[, geneSamp], nCol = 40)
     clustTab <- table(clustVec)
     prll <- setPar(nCores, datList)

@@ -5,7 +5,7 @@
 #'
 #' @docType data
 #'
-#' @usage data(pbmcSmall)
+#' @usage data("pbmcSmall")
 #'
 #' @format An object of class \code{"dgCMatrix"}.
 #'
@@ -14,7 +14,7 @@
 #' @source \href{https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k}{3k PBMCs from a Healthy Donor}
 #'
 #' @examples
-#' data(pbmcSmall)
+#' data("pbmcSmall")
 #' str(pbmcSmall)
 #'
 #' @importClassesFrom Matrix dgCMatrix

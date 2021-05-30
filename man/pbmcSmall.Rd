@@ -11,14 +11,14 @@ An object of class \code{"dgCMatrix"}.
 \href{https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k}{3k PBMCs from a Healthy Donor}
 }
 \usage{
-data(pbmcSmall)
+data("pbmcSmall")
 }
 \description{
 This dataset derives from the "3k PBMCs from a Healthy Donor" public dataset
 from 10X Genomics.
 }
 \examples{
-data(pbmcSmall)
+data("pbmcSmall")
 str(pbmcSmall)
 
 }
