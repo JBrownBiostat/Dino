@@ -584,7 +584,7 @@ calcStep_func <- function(parList) {
         parList <- alphaLine_func(parList, w1, w2, c1, c2)
     }
 
-    if(is.null(em_alpha(parList))) {
+    if(em_alpha(parList) == 0) {
         # Reset S matrix (indefinite) and take standard EM step
         parList <- resetS_func(parList)
     }
@@ -617,7 +617,7 @@ zoom_func <- function(parList, alphaBounds) {
     while(TRUE) {
         iter <- iter + 1
         if(iter == 10) {
-            return(NULL)
+            return(0)
         }
         parList <- em_alphaSet(parList, mean(alphaBounds))
         parList <- em_parUpdateSet(parList, parUpdate_func(parList))

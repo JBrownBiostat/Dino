@@ -67,3 +67,17 @@
 
 * Bug fix
 * Reduce data size
+
+
+## Dino 0.99.9
+
+---------------------
+
+* Bug fix
+
+
+## Dino 0.99.10
+
+---------------------
+
+* Bug fix

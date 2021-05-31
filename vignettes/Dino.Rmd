@@ -195,19 +195,25 @@ themeObj <- theme(
 p1_func <- function(simDat, dinoLam, muVec, themeObj) {
     p1 <- ggplot(simDat, aes(x = LS, y = y)) +
         theme_classic() +
-      geom_hex(aes(fill = log10(..count..))) +
-      scale_fill_viridis_c() +
-      labs(x = "log-Depth", y = "Expression (log)",
-           title = "Fitted means", fill = "Count\n(log10)")
+        geom_hex(aes(fill = log10(..count..))) +
+        scale_fill_viridis_c() +
+        labs(
+            x = "log-Depth", y = "Expression (log)",
+            title = "Fitted means", fill = "Count\n(log10)"
+        )
     for(i in 1:length(dinoLam)) {
         p1 <- p1 +
-          geom_abline(slope = 1, intercept = log1p(dinoLam[i]),
-                      col = 1, alpha = 0.5, lwd = 0.75)
+            geom_abline(
+                slope = 1, intercept = log1p(dinoLam[i]),
+                col = 1, alpha = 0.5, lwd = 0.75
+            )
     }
     for(i in 1:length(muVec)) {
         p1 <- p1 +
-          geom_abline(slope = 1, intercept = log1p(muVec[i]),
-                      col = 2, lwd = 1.5)
+            geom_abline(
+                slope = 1, intercept = log1p(muVec[i]),
+                col = 2, lwd = 1.5
+            )
     }
     p1 <- p1 +
         themeObj
@@ -218,30 +224,34 @@ p2_func <- function(plotDat, themeObj) {
     y.dens <- plotDat$y[plotDat$model == "NB"]
     p2 <- ggplot(plotDat, aes(x = x, y = y, color = model)) +
         theme_classic() +
-      geom_line() +
-      scale_color_manual(values = 1:2) +
-      labs(x = "Expression", y = "Density", color = "Model",
-           title = "Reference vs.\nFitted distribution") +
-      themeObj
+        geom_line() +
+        scale_color_manual(values = 1:2) +
+        labs(
+            x = "Expression", y = "Density", color = "Model",
+            title = "Reference vs.\nFitted distribution"
+        ) +
+        themeObj
     xInd <- which.max(
         y.dens < 1e-3 * max(y.dens) &
             x.dens > x.dens[which.max(y.dens)]
     )
     if(xInd > 1) {
         p2 <- p2 +
-          xlim(c(
-            0, 
-            x.dens[which.max(y.dens < 1e-3 * max(y.dens) &
-                               x.dens > x.dens[which.max(y.dens)])]
-          ))
+            xlim(c(
+                0, 
+                x.dens[which.max(
+                    y.dens < 1e-3 * max(y.dens) &
+                        x.dens > x.dens[which.max(y.dens)]
+                )]
+            ))
     }
     dinoDens <- data.frame(
-      x = plotDat$x[plotDat$model == "Dino"],
-      y = plotDat$y[plotDat$model == "Dino"]
+        x = plotDat$x[plotDat$model == "Dino"],
+        y = plotDat$y[plotDat$model == "Dino"]
     )
     if(max(y.dens) < max(dinoDens$y)) {
         p2 <- p2 +
-          ylim(c(0, min(c(1.025 * max(dinoDens$y), 1.5 * max(y.dens)))))
+            ylim(c(0, min(c(1.025 * max(dinoDens$y), 1.5 * max(y.dens)))))
     }
     return(p2)
 }
