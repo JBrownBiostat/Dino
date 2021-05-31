@@ -59,7 +59,7 @@ Norm_Seurat <- SeuratFromDino(UMI_Mat)
 
 ## Read UMI data
 
-To facilitate concrete examples, we demonstrate normalization on a small subset of sequencing data from about 3,000 peripheral blood mononuclear cells (PBMCs) published by [10X Genomics](https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k). This dataset, named `pbmcSmall` contains 300 cells and 2,000 genes and is included with the **Dino** package.
+To facilitate concrete examples, we demonstrate normalization on a small subset of sequencing data from about 3,000 peripheral blood mononuclear cells (PBMCs) published by [10X Genomics](https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k). This dataset, named `pbmcSmall` contains 200 cells and 1,000 genes and is included with the **Dino** package.
 
 ```{r load pbmcSmall data}
 set.seed(1)

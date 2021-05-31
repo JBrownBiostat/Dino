@@ -43,20 +43,23 @@ devInit_func <- function(y, depth, depthRep, slope) {
     ret$freq <- freq[-1] - freq[-length(freq)]
 
     # Calculate lower deviations
-    ret$lowDev <- sum((log(0.999) + slope * (depth - ret$intercept[1])) -
-                          logY) -
-        cumsum(c(0, diff(ret$intercept) * slope *
-                     rev(cumsum(rev(ret$freq[-1])))))
+    ret$lowDev <- sum(
+        (log(0.999) + slope * (depth - ret$intercept[1])) - logY
+    ) - cumsum(
+        c(0, diff(ret$intercept) * slope * rev(cumsum(rev(ret$freq[-1]))))
+    )
 
     # Calculate upper deviations
     intDepthOrd <- order(c(ret$intercept, depthRep$depth))
     ret$highDev <- c(
         0,
         cumsum(
-            (cumsum(c(ret$freq, -depthRep$rep)[intDepthOrd])
-             [-(nrow(ret) + nrow(depthRep))] *
-                 diff(c(ret$intercept, depthRep$depth)[intDepthOrd])) *
-                slope)[intDepthOrd <= nrow(ret)][-nrow(ret)]
+            (
+                cumsum(c(ret$freq, -depthRep$rep)[intDepthOrd])
+                [-(nrow(ret) + nrow(depthRep))] *
+                    diff(c(ret$intercept, depthRep$depth)[intDepthOrd])
+            ) * slope
+        )[intDepthOrd <= nrow(ret)][-nrow(ret)]
     )
 
     # Calculate numbers of zeros (censored points)
@@ -78,12 +81,15 @@ devInit_func <- function(y, depth, depthRep, slope) {
 convexDev_func <- function(ret, slope) {
     nY <- sum(ret$freq)
     chullInt <- chull(ret$highDev, ret$lowDev)
-    chullInt <- chullInt[which.max(chullInt == nrow(ret)):
-                             which.max(chullInt == 1)]
+    chullInt <- chullInt[
+        which.max(chullInt == nrow(ret)):which.max(chullInt == 1)
+    ]
     hRet <- ret[rev(chullInt), ]
-    hRet$m <- c(1e3 * diff(hRet$lowDev[seq_len(2)]) /
-                    diff(hRet$highDev[seq_len(2)]),
-                diff(hRet$lowDev) / diff(hRet$highDev))
+    hRet$m <- c(
+        1e3 * diff(hRet$lowDev[seq_len(2)]) /
+            diff(hRet$highDev[seq_len(2)]),
+        diff(hRet$lowDev) / diff(hRet$highDev)
+    )
     mFunc <- approxfun(x = hRet$highDev, y = hRet$m)
     m <- mFunc(ret$highDev)
     ret$pct <- -m / (1 - m)
@@ -126,9 +132,9 @@ estLowerCDF_func <- function(ret) {
         ret,
         data.frame(
             pct = seq(minP, 0, length = ceiling(100 * minP)),
-            quant = log(qgamma(seq(minP, 0, length = ceiling(100 * minP)),
-                               mu / beta, beta)) -
-                (min(ret$quant) - log(qgamma(minP, mu / beta, beta)))
+            quant = log(qgamma(
+                seq(minP, 0, length = ceiling(100 * minP)), mu / beta, beta
+            )) - (min(ret$quant) - log(qgamma(minP, mu / beta, beta)))
         )
     )
     ret <- ret[!duplicated(ret$pct), ]

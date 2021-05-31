@@ -1,4 +1,4 @@
-#' Subset of 500 peripheral blood mononuclear cells (PBMCs) from a healthy donor
+#' Subset of 200 peripheral blood mononuclear cells (PBMCs) from a healthy donor
 #'
 #' This dataset derives from the "3k PBMCs from a Healthy Donor" public dataset
 #' from 10X Genomics.

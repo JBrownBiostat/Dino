@@ -476,8 +476,10 @@ emParCheck_func <- function(parList, subInd) {
             parList <- em_SSet(parList, em_S(parList) * 0)
         } else {endLoop <- TRUE}
     }
-    if(any(gamInd > 75) | any(betaInd > 75) |
-       max(gamInd) - min(gamInd) > log(2 * length(subInd))) {
+    if(
+        any(gamInd > 75) | any(betaInd > 75) |
+        max(gamInd) - min(gamInd) > log(2 * length(subInd))
+    ) {
         parList <- em_SSet(parList, em_S(parList) * 0)
     }
 
@@ -790,9 +792,11 @@ posteriorSample_func <- function(parList, y, depth, fitSlope, prec, emPar) {
     shapeVec <- lamPar / phi
     concVec <- emPar$conPar
 
-    normVec <- rgamma(n = length(em_y(parList)),
-                      shape = em_y(parList) * concVec + shapeVec[distVec],
-                      scale = 1 / (em_depth(parList) * concVec + 1 / phi))
+    normVec <- rgamma(
+        n = length(em_y(parList)),
+        shape = em_y(parList) * concVec + shapeVec[distVec],
+        scale = 1 / (em_depth(parList) * concVec + 1 / phi)
+    )
     normVec <- round(normVec, prec)
 
     return(normVec)
