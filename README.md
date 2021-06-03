@@ -31,11 +31,20 @@ For further details on implementation, options, and variations, consult the vign
 vignette("Dino")
 ```
 
+## Code repository
+
+In addition to GitHub, *Dino* is further freely available for download from Zenodo:
+[https://zenodo.org/record/4897558#.YLjjnW5Okko](https://zenodo.org/record/4897558#.YLjjnW5Okko)
+
 ## Citation
 
 If you use *Dino* in your analysis, please cite our paper:
 
 Brown, J., Ni, Z., Mohanty, C., Bacher, R., and Kendziorski, C. (2020). Normalization by distributional resampling of high throughput single-cell RNA-sequencing data. bioRxiv. [https://doi.org/10.1101/2020.10.28.359901](https://doi.org/10.1101/2020.10.28.359901).
+
+and consider citing our release on Zenodo:
+
+doi: [https://doi.org/10.5281/zenodo.4897558](https://doi.org/10.5281/zenodo.4897558)
 
 ## Contact
 
