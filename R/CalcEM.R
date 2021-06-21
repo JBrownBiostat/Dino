@@ -68,6 +68,8 @@ parResampCounts <- function(countList, depth, depthRep, slope,
     }
     if(length(normList) == 2) {
         normList <- cbind(normList[[1]], normList[[2]])
+    } else {
+        normList <- normList[[1]]
     }
     return(normList)
 }
