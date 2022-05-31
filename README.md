@@ -26,7 +26,7 @@ browseVignettes("Dino")
 `Dino` is also available from Github, and bug fixes, patches, and updates are available there first. To install `Dino` from Github, run
 
 ```
-devtools::install_github('JBrownBiostat/Dino')
+devtools::install_github('JBrownBiostat/Dino', build_vignettes = TRUE)
 ```
 
 *Note:* building the vignette can take a few minutes. If you do not require the vignette, consider running with `build_vignettes = FALSE` to save time.
