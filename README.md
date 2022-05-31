@@ -60,7 +60,7 @@ In addition to [BioConductor](http://www.bioconductor.org/packages/release/bioc/
 
 If you use `Dino` in your analysis, please cite our paper:
 
-Brown, J., Ni, Z., Mohanty, C., Bacher, R., and Kendziorski, C. (2021). Normalization by distributional resampling of high throughput single-cell RNA-sequencing data. Bioinformatics, 37, 4123-4128. [https://academic.oup.com/bioinformatics/article/37/22/4123/6306403](https://academic.oup.com/bioinformatics/article/37/22/4123/6306403
+Brown, J., Ni, Z., Mohanty, C., Bacher, R., and Kendziorski, C. (2021). Normalization by distributional resampling of high throughput single-cell RNA-sequencing data. Bioinformatics, 37, 4123-4128. [https://academic.oup.com/bioinformatics/article/37/22/4123/6306403](https://academic.oup.com/bioinformatics/article/37/22/4123/6306403)
 
 ## Contact
 
