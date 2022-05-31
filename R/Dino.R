@@ -158,7 +158,7 @@ dinoResamp_func <- function(
     libGenes <- which(!(seq_len(ncol(counts[subInd, ])) %in% dinoGenes))
     if(length(libGenes) > 0){
         warning(cat(
-            "Some genes have expression non-zero expression below ",
+            "Some genes have non-zero expression below",
             "'minNZ' when subsampled\nand will be normalized via scale-factor"
         ))
         libCounts <- counts[, libGenes, drop = FALSE]
