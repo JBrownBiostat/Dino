@@ -88,3 +88,13 @@
 ---------------------
 
 * Bug fix
+
+
+## Dino 1.3.1
+
+---------------------
+
+* Bug fix for input data formats: matrices with named rownames and DelayedMatrix
+* Vignette updates
+* Citation updates
+* Contact updates 

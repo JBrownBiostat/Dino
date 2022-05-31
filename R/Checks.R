@@ -33,7 +33,7 @@ checkCounts <- function(counts) {
     }
     if(!is(counts, "dgCMatrix")) {
         message("converting 'counts' to dgCMatrix")
-        counts <- Matrix(counts, sparse = TRUE)
+        counts <- as(counts, "dgCMatrix")
     }
     if(any(round(counts) != counts)) {
         message("rounding 'counts'")

@@ -2,7 +2,7 @@
 title: "Normalization by distributional resampling of high throughput single-cell RNA-sequencing data"
 authors: "Jared Brown and Christina Kendziorski"
 package: Dino
-date: 05/30/2021
+date: 05/31/2022
 output: BiocStyle::html_document
 vignette: >
     %\VignetteIndexEntry{Normalization by distributional resampling of high throughput single-cell RNA-sequencing data}
@@ -18,19 +18,34 @@ opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 # Introduction
 
 Over the past decade, advances in single-cell RNA-sequencing (scRNA-seq) technologies have significantly increased the sensitivity and specificity with which cellular transcriptional dynamics can be analyzed. Further, parallel increases in the number cells which can be simultaneously sequenced have allowed for novel analysis pipelines including the description of transcriptional trajectories and the discovery of rare sub-populations of cells. The development of droplet-based, unique-molecular-identifier (UMI) protocols such as Drop-seq, inDrop, and the 10x Genomics Chromium platform have significantly contributed to these advances. In particular, the commercially available 10x Genomics platform has allowed the rapid and cost effective gene expression profiling of hundreds to tens of thousands of cells across many studies to date.
-The use of UMIs in the 10x Genomics and related platforms has augmented these developments in sequencing technology by tagging individual mRNA transcripts with unique cell and transcript specific identifiers. In this way, biases due to transcript length and PCR amplification have been significantly reduced. However, technical variability in sequencing depth remains and, consequently, normalization to adjust for sequencing depth is required to ensure accurate downstream analyses. To address this, we introduce **Dino** and `Dino`, its corresponding `R` package.
 
-**Dino** utilizes a flexible mixture of Negative Binomials model of gene expression to reconstruct full gene-specific expression distributions which are independent of sequencing depth. By giving exact zeros positive probability, the Negative Binomial components are applicable to shallow sequencing (high proportions of zeros). Additionally, the mixture component is robust to cell heterogeneity as it accommodates multiple centers of gene expression in the distribution. By directly modeling (possibly heterogenous) gene-specific expression distributions, Dino outperforms competing approaches, especially for datasets in which the proportion of zeros is high as is typical for modern, UMI based protocols.
+The use of UMIs in the 10x Genomics and related platforms has augmented these developments in sequencing technology by tagging individual mRNA transcripts with unique cell and transcript specific identifiers. In this way, biases due to transcript length and PCR amplification have been significantly reduced. However, technical variability in sequencing depth remains and, consequently, normalization to adjust for sequencing depth is required to ensure accurate downstream analyses. To address this, we introduce `Dino`, an `R` package implementing the **Dino** normalization method.
 
-**Dino** does not attempt to correct for batch or other sample specific effects, and will only do so to the extent that they are correlated with sequencing depth. In situations where batch effects are expected, downstream analysis may benefit from such accommodations.
+`Dino` utilizes a flexible mixture of Negative Binomials model of gene expression to reconstruct full gene-specific expression distributions which are independent of sequencing depth. By giving exact zeros positive probability, the Negative Binomial components are applicable to shallow sequencing (high proportions of zeros). Additionally, the mixture component is robust to cell heterogeneity as it accommodates multiple centers of gene expression in the distribution. By directly modeling (possibly heterogenous) gene-specific expression distributions, Dino outperforms competing approaches, especially for datasets in which the proportion of zeros is high as is typical for modern, UMI based protocols.
+
+`Dino` does not attempt to correct for batch or other sample specific effects, and will only do so to the extent that they are correlated with sequencing depth. In situations where batch effects are expected, downstream analysis may benefit from such accommodations.
 
 # Quick Start
 
 ## Installation
 
-To install `Dino` from Github, run
+`Dino` is now available on `BioConductor` and can be easily installed from that repository by running:
 
-```{r Install Dino, eval = FALSE}
+```{r Install Dino BioC, eval = FALSE}
+# Install Bioconductor if not present, skip otherwise
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+# Install Dino package
+BiocManager::install("Dino")
+
+# View (this) vignette from R
+browseVignettes("Dino")
+```
+
+`Dino` is also available from Github, and bug fixes, patches, and updates are available there first. To install `Dino` from Github, run
+
+```{r Install Dino Github, eval = FALSE}
 devtools::install_github('JBrownBiostat/Dino')
 ```
 
@@ -45,7 +60,7 @@ library(Dino)
 Norm_Mat <- Dino(UMI_Mat)
 
 # Return a Seurat object from already normalized expression
-# Use un-transformed normalized expression
+# Use normalized (doNorm = FALSE) and un-transformed (doLog = FALSE) expression
 Norm_Seurat <- SeuratFromDino(Norm_Mat, doNorm = FALSE, doLog = FALSE)
 
 # Return a Seurat object from UMI expression
@@ -59,7 +74,7 @@ Norm_Seurat <- SeuratFromDino(UMI_Mat)
 
 ## Read UMI data
 
-To facilitate concrete examples, we demonstrate normalization on a small subset of sequencing data from about 3,000 peripheral blood mononuclear cells (PBMCs) published by [10X Genomics](https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k). This dataset, named `pbmcSmall` contains 200 cells and 1,000 genes and is included with the **Dino** package.
+To facilitate concrete examples, we demonstrate normalization on a small subset of sequencing data from about 3,000 peripheral blood mononuclear cells (PBMCs) published by [10X Genomics](https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k). This dataset, named `pbmcSmall` contains 200 cells and 1,000 genes and is included with the `Dino` package.
 
 ```{r load pbmcSmall data}
 set.seed(1)
@@ -72,13 +87,13 @@ data("pbmcSmall")
 print(dim(pbmcSmall))
 ```
 
-While **Dino** was developed to normalize UMI count data, it will run on any matrix of non-negative expression data; user caution is advised if applying **Dino** to non-UMI sequencing protocols. Input formats may be sparse or dense matrices of expression with genes (features) on the rows and cells (samples) on the columns.
+While `Dino` was developed to normalize UMI count data, it will run on any matrix of non-negative expression data; user caution is advised if applying `Dino` to non-UMI sequencing protocols. Input formats may be sparse or dense matrices of expression with genes (features) on the rows and cells (samples) on the columns.
 
 ## Clean UMI data
 
-While **Dino** can normalize the `pbmcSmall` dataset as it currently exists, the resulting normalized matrix, and in particular, downstream analysis are likely to be improved by cleaning the data. Of greatest use is removing genes that are expected *not* to contain useful information. This set of genes may be case dependent, but a good rule of thumb for UMI protocols is to remove genes lacking a minimum of non-zero expression prior to normalization and analysis. 
+While `Dino` can normalize the `pbmcSmall` dataset as it currently exists, the resulting normalized matrix, and in particular, downstream analysis are likely to be improved by cleaning the data. Of greatest use is removing genes that are expected *not* to contain useful information. This set of genes may be case dependent, but a good rule of thumb for UMI protocols is to remove genes lacking a minimum of non-zero expression prior to normalization and analysis. 
 
-By default, **Dino** will not perform the resampling algorithm on any genes without at least 10 non-zero samples, and will rather normalize such genes by scaling with sequencing depth. To demonstrate a stricter threshold, we remove genes lacking at least 20 non-zero samples prior to normalization.
+By default, `Dino` will not perform the resampling algorithm on any genes without at least 10 non-zero samples, and will rather normalize such genes by scaling with sequencing depth. To demonstrate a stricter threshold, we remove genes lacking at least 20 non-zero samples prior to normalization.
 
 ```{r clean data}
 # Filter genes for a minimum of non-zero expression
@@ -88,7 +103,7 @@ print(dim(pbmcSmall))
 
 ## Normalize UMI data
 
-**Dino** contains several options to tune output. One of particular interest is `nCores` which allows for parallel computation of normalized expression. By default, **Dino** runs with two threads. Choosing `nCores = 0` will utilize all available cores, and otherwise an integer number of parallel instances can be chosen.
+`Dino` contains several options to tune output. One of particular interest is `nCores` which allows for parallel computation of normalized expression. By default, `Dino` runs with two threads. Choosing `nCores = 0` will utilize all available cores, and otherwise an integer number of parallel instances can be chosen.
 
 ```{r normalize data, eval = FALSE}
 # Normalize data
@@ -101,7 +116,7 @@ invisible(capture.output(pbmcSmall_Norm <- Dino(pbmcSmall)))
 
 ## Clustering with Seurat
 
-After normalization, **Dino** makes it easy to perform data analysis. The default output is the normalized matrix in sparse format, and **Dino** additionally provides a function to transform normalized output into a **Seurat** object. We demonstrate this by running a quick clustering pipeline in **Seurat**. Much of the pipeline is modified from the tutorial at [https://satijalab.org/seurat/v3.1/pbmc3k_tutorial.html](https://satijalab.org/seurat/v3.1/pbmc3k_tutorial.html)
+After normalization, `Dino` makes it easy to perform data analysis. The default output is the normalized matrix in sparse format, and `Dino` additionally provides a function to transform normalized output into a `Seurat` object. We demonstrate this by running a quick clustering pipeline in `Seurat`. Much of the pipeline is modified from the tutorial at [https://satijalab.org/seurat/v3.1/pbmc3k_tutorial.html](https://satijalab.org/seurat/v3.1/pbmc3k_tutorial.html)
 
 ```{R Seurat clustering}
 # Reformat normalized expression as a Seurat object
@@ -123,7 +138,7 @@ DimPlot(pbmcSmall_Seurat, reduction = "umap")
 
 ## Normalizing data formatted as SingleCellExperiment
 
-**Dino** additionally supports the normalization of datasets formatted as *SingleCellExperiment*. As with the **Seurat** pipeline, this functionality is implemented through the use of a wrapper function. We demonstrate this by quickly converting the *pbmcSmall* dataset to a *SingleCellExperiment* object and then normalizing.
+`Dino` additionally supports the normalization of datasets formatted as *SingleCellExperiment*. As with the `Seurat` pipeline, this functionality is implemented through the use of a wrapper function. We demonstrate this by quickly converting the *pbmcSmall* dataset to a *SingleCellExperiment* object and then normalizing.
 
 ```{r SinglleCellExperiment, eval = FALSE}
 # Reformatting pbmcSmall as a SingleCellExperiment
@@ -147,9 +162,9 @@ str(normcounts(pbmc_SCE))
 
 ## Alternate sequencing depth
 
-By default, **Dino** computes sequencing depth, which is corrected for in the normalized data, as the sum of expression for a cell (sample) across genes. This sum is then scaled such that the median depth is 1. For some datasets, however, it may be beneficial to run **Dino** on an alternately computed set of sequencing depths. *Note*: it is generally recommended that the median depth not be far from 1 as this corresponds to recomputing expression as though all cells had been sequenced at the median depth.
+By default, `Dino` computes sequencing depth, which is corrected for in the normalized data, as the sum of expression for a cell (sample) across genes. This sum is then scaled such that the median depth is 1. For some datasets, however, it may be beneficial to run `Dino` on an alternately computed set of sequencing depths. *Note*: it is generally recommended that the median depth not be far from 1 as this corresponds to recomputing expression as though all cells had been sequenced at the median depth.
 
-A simple pipeline to compute alternate sequencing depths utilizes the **Scran** method for computing normalization scale factors, and is demonstrated below.
+A simple pipeline to compute alternate sequencing depths utilizes the `Scran` method for computing normalization scale factors, and is demonstrated below.
 
 ```{r Scran depths, eval = FALSE}
 library(scran)
@@ -161,20 +176,22 @@ scranSizes <- calculateSumFactors(pbmcSmall)
 pbmcSmall_SNorm <- Dino(pbmcSmall, nCores = 1, depth = log(scranSizes))
 ```
 
+A fuller discussion of a specific use case for providing alternate sequencing depths can be viewed on the `Dino` Github page: [Issue #1](https://github.com/JBrownBiostat/Dino/issues/1)
+
 
 # Method
 ## Model
-**Dino** models observed UMI counts as a mixture of Negative Binomial random variables. The Negative Binomial distribution can, however, be decomposed into a hierarchical Gamma-Poisson distribution, so for gene $g$ and cell $j$, the **Dino** model for UMI counts is:
+`Dino` models observed UMI counts as a mixture of Negative Binomial random variables. The Negative Binomial distribution can, however, be decomposed into a hierarchical Gamma-Poisson distribution, so for gene $g$ and cell $j$, the `Dino` model for UMI counts is:
 $$y_{gj}\sim f^{P}(\lambda_{gj}\delta_{j})\\
 \lambda_{gj}\sim\sum_{K}\pi_{k}f^{G}\left(\frac{\mu_{gk}}{\theta_g},\theta_g\right)$$
 where $f^{P}$ is a Poisson distribution parameterized by mean $\lambda_{gj}\delta_{j}$ and $f^{G}$ is a Gamma distribution parameterized by shape $\mu_{gk}/\theta_g$ and scale $\theta_g$. $\delta_{j}$ is the cell-specific sequencing depth, $\lambda_{gj}$ is the latent level of gene/cell-specific expression independent of depth, component probabilities $\pi_{k}$ sum to 1, the Gamma distribution is parameterized such that $\mu_{gk}$ denotes the distribution mean, and the Gamma scale paramter, $\theta_g$, is constant across mixture components.
 
-Following model fitting for a fixed gene through an accelerated EM algorithm, **Dino** produces normalized expression values by resampling from the posterior distribution of the latent expression parameters, $\lambda_{gj}$. It can be shown that the distribution on the $\lambda_{j}$ (dropping the gene-specific subscript $g$ as calculations are repreated across genes) is a mixture of Gammas, specifically:
+Following model fitting for a fixed gene through an accelerated EM algorithm, `Dino` produces normalized expression values by resampling from the posterior distribution of the latent expression parameters, $\lambda_{gj}$. It can be shown that the distribution on the $\lambda_{j}$ (dropping the gene-specific subscript $g$ as calculations are repreated across genes) is a mixture of Gammas, specifically:
 $$\mathbb{P}(\lambda_{j}|y_{j},\delta_j)=\sum_{K}\tau_{kj}f^{G}\left(\frac{\mu_{k}}{\theta}+\gamma y_{j},\frac{1}{\frac{1}{\theta}+\gamma\delta_j}\right)$$
-where $\tau_{kj}$ denotes the conditional probability that $\lambda_{gj}$ was sampled from mixture component $k$ and $\gamma$ is a global concentration parameter. The $\tau_{kj}$ are estimated as part of the implementation of the EM algorithm in **Dino**. The adjustment from the concentration parameter can be seen as a bias in the normalized values towards a scale-factor version of normalization, since, in the limit of $\gamma$, the normalized expression for cell $j$ converges to $y_j/\delta_j$. Default values of $\gamma=15$ have proven successful.
+where $\tau_{kj}$ denotes the conditional probability that $\lambda_{gj}$ was sampled from mixture component $k$ and $\gamma$ is a global concentration parameter. The $\tau_{kj}$ are estimated as part of the implementation of the EM algorithm in `Dino`. The adjustment from the concentration parameter can be seen as a bias in the normalized values towards a scale-factor version of normalization, since, in the limit of $\gamma$, the normalized expression for cell $j$ converges to $y_j/\delta_j$. Default values of $\gamma=15$ have proven successful.
 
 ## Mixture components $K$
-Approximating the flexibility of a non-parametric method, **Dino** uses a large number of mixture components, $K$, in order to capture the full heterogeneity of expression that may exist for a given gene. The gene-specific number of components is estimated as the square root of the number of strictly positive UMI counts for a given gene. By default, $K$ is limited to be no larger than 100. In simulation, large values of $K$ are shown to successfully reconstruct both unimodal and multimodal underlying distributions. For example, when UMI counts are estimated under a single negative binomial distribution, the **Dino** fitted prior distribution (black, right panel) which is used to sample normalized expression closely matches the theoretical sampling distribution (red, right panel). Likewise, the fitted means ($\mu_k$ in the model, gray lines, left panel) span the range of the simulated data (heat map of counts, left panel), but concentrate around the theoretical mean of the sampling distribution (red, left panel).
+Approximating the flexibility of a non-parametric method, `Dino` uses a large number of mixture components, $K$, in order to capture the full heterogeneity of expression that may exist for a given gene. The gene-specific number of components is estimated as the square root of the number of strictly positive UMI counts for a given gene. By default, $K$ is limited to be no larger than 100. In simulation, large values of $K$ are shown to successfully reconstruct both unimodal and multimodal underlying distributions. For example, when UMI counts are estimated under a single negative binomial distribution, the `Dino` fitted prior distribution (black, right panel) which is used to sample normalized expression closely matches the theoretical sampling distribution (red, right panel). Likewise, the fitted means ($\mu_k$ in the model, gray lines, left panel) span the range of the simulated data (heat map of counts, left panel), but concentrate around the theoretical mean of the sampling distribution (red, left panel).
 
 ```{r Unimodal Simulation, echo = FALSE, warning = FALSE}
 library(ggplot2)
@@ -289,7 +306,7 @@ sessionInfo()
 
 If you use *Dino* in your analysis, please cite our paper:
 
-Brown, J., Ni, Z., Mohanty, C., Bacher, R., and Kendziorski, C. (2020). "Normalization by distributional resampling of high throughput single-cell RNA-sequencing data." bioRxiv. [https://doi.org/10.1101/2020.10.28.359901](https://doi.org/10.1101/2020.10.28.359901).
+Brown, J., Ni, Z., Mohanty, C., Bacher, R., and Kendziorski, C. (2021). "Normalization by distributional resampling of high throughput single-cell RNA-sequencing data." Bioinformatics, 37, 4123-4128. [https://academic.oup.com/bioinformatics/article/37/22/4123/6306403](https://academic.oup.com/bioinformatics/article/37/22/4123/6306403).
 
 Other work referenced in this vignette include:
 
@@ -304,8 +321,8 @@ Lun, A. T. L., Bach, K. and Marioni, J. C. (2016). "Pooling across cells to norm
 
 # Contact
 
-Jared Brown: brownj AT biostat DOT wisc DOT edu
+Jared Brown: ![](JBrownEmail.jpg)
 
-Christina Kendziorski: kendzior AT biostat DOT wisc DOT edu
+Christina Kendziorski: ![](CKendzEmail.jpg)
 
 

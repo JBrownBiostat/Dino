@@ -199,6 +199,7 @@ estSlope_func <- function(
 ) {
     if(is.null(slope)) {
         message("Calculating regression slope")
+        colnames(counts) <- unname(colnames(counts))
         slope <- calcSlope(
             counts, depth, nSubGene, nSubCell, clusterSlope, nCores, ...
         )
